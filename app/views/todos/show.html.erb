@@ -1,0 +1,18 @@
+<%= turbo_frame_tag dom_id(@todo) do %>
+  <div class="card">
+    <p class="meta">
+      Status: <strong><%= @todo.is_done ? "Done" : "Open" %></strong> ·
+      Due: <%= @todo.due_on || "—" %> ·
+      Project: <%= link_to @todo.project.name, @todo.project %>
+    </p>
+    <hr class="hr">
+    <p><%= simple_format(@todo.description) %></p>
+
+    <div style="margin-top:10px;">
+      <%= button_to (@todo.is_done ? "Mark as Undone" : "Mark as Done"),
+                    toggle_done_todo_path(@todo),
+                    method: :patch,
+                    form: { data: { turbo: true } } %>
+    </div>
+  </div>
+<% end %>

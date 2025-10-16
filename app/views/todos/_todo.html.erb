@@ -1,0 +1,28 @@
+<%= turbo_frame_tag dom_id(todo) do %>
+  <article class="card">
+    <h3 style="margin:0 0 6px;">
+      <%= link_to todo.title, todo %>
+      <% if todo.is_done %><span class="meta">· done</span><% end %>
+    </h3>
+
+    <p class="meta">
+      <% if todo.due_on.present? %>
+        Due: <%= todo.due_on %>
+      <% else %>
+        No due date
+      <% end %>
+    </p>
+
+    <p><%= truncate(todo.description.to_s, length: 150) %></p>
+
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <%= link_to "Open", todo, class: "btn" %>
+      <%= link_to "Edit", edit_todo_path(todo), class: "btn btn--ghost" %>
+      <%= button_to(
+            (todo.is_done ? "Mark as Undone" : "Mark as Done"),
+            toggle_done_todo_path(todo),
+            method: :patch
+          ) %>
+    </div>
+  </article>
+<% end %>

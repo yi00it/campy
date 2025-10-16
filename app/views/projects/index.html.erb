@@ -1,0 +1,18 @@
+<div class="header-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+  <h1 style="margin:0;">Your Projects</h1>
+  <%= link_to "New Project", new_project_path, class: "btn" %>
+</div>
+
+<div class="grid cards">
+  <% @projects.each do |p| %>
+    <article class="card">
+      <h3><%= link_to p.name, p %></h3>
+      <p class="meta"><%= truncate(p.description.to_s, length: 120) %></p>
+      <hr class="hr">
+      <div style="display:flex;gap:8px;">
+        <%= link_to "Open", p, class: "btn" %>
+        <%= link_to "Edit", edit_project_path(p), class: "btn btn--ghost" %>
+      </div>
+    </article>
+  <% end %>
+</div>

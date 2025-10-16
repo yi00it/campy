@@ -1,0 +1,21 @@
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+  <h1 style="margin:0;"><%= @project.name %></h1>
+  <div style="display:flex;gap:8px;">
+    <%= link_to "Edit", edit_project_path(@project), class: "btn btn--ghost" %>
+    <%= link_to "Delete", @project, data: { turbo_method: :delete, turbo_confirm: "Delete project?" }, class: "btn btn--ghost" %>
+    <%= link_to "Back", projects_path, class: "btn" %>
+  </div>
+</div>
+
+<p class="meta"><%= simple_format(@project.description) %></p>
+<hr class="hr">
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0 6px;">
+  <h2 style="margin:0;">Todos</h2>
+  <%= link_to "New Todo", new_project_todo_path(@project), class: "btn" %>
+</div>
+
+<div class="grid cards">
+  <%= render partial: "todos/todo", collection: @todos, as: :todo %>
+</div>
+</div>

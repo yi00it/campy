@@ -1,0 +1,35 @@
+<%= form_with(model: (todo.persisted? ? todo : [project, todo]), local: true) do |form| %>
+  <% if todo.errors.any? %>
+    <div class="flash">
+      <p class="flash__item flash__item--warn">
+        <%= pluralize(todo.errors.count, "error") %> prevented saving:
+        <%= todo.errors.full_messages.to_sentence %>
+      </p>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :title %>
+    <%= form.text_field :title, autofocus: true %>
+  </div>
+
+  <div class="field">
+    <%= form.label :description %>
+    <%= form.text_area :description, rows: 5 %>
+  </div>
+
+  <div class="field">
+    <%= form.label :due_on, "Due date" %>
+    <%= form.date_field :due_on %>
+  </div>
+
+  <div class="field">
+    <label>
+      <%= form.check_box :is_done %> Done
+    </label>
+  </div>
+
+  <div class="actions">
+    <%= form.submit "Save", class: "btn" %>
+  </div>
+<% end %>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Campy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body class="app">
+    <header class="site-header">
+      <div class="wrap">
+        <%= link_to "Campy", (user_signed_in? ? authenticated_root_path : root_path), class: "brand" %>
+        <nav class="nav">
+          <% if user_signed_in? %>
+            <%= link_to "Projects", projects_path, class: "nav-link" %>
+            <%= button_to "Sign out", destroy_user_session_path, method: :delete, class: "btn btn--ghost" %>
+          <% else %>
+            <%= link_to "Sign in", new_user_session_path, class: "btn btn--ghost" %>
+            <%= link_to "Sign up", new_user_registration_path, class: "btn" %>
+          <% end %>
+        </nav>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <%= render "shared/flash" %>
+      <%= yield %>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <small>© <%= Time.current.year %> Campy</small>
+      </div>
+    </footer>
+  </body>
+</html>
