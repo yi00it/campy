@@ -1,18 +1,40 @@
-<div class="header-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-  <h1 style="margin:0;">Your Projects</h1>
-  <%= link_to "New Project", new_project_path, class: "btn" %>
-</div>
+<section class="section">
+  <header class="section__head">
+    <div class="list-inline">
+      <span class="pill">Projects HQ</span>
+      <span class="pill pill--sunrise"><%= pluralize(@projects.count, "active project") %></span>
+    </div>
+    <h1 class="section__title">Welcome back! Pick up right where you left off.</h1>
+    <p class="section__lead">
+      Every project keeps its activities, notes, and progress tucked into a single friendly space. Spin up a new one in seconds.
+    </p>
+    <div class="hero__cta">
+      <%= link_to "Create a project", new_project_path, class: "btn btn--primary" %>
+      <%= link_to "Manage categories", categories_path, class: "btn btn--ghost" %>
+    </div>
+  </header>
 
-<div class="grid cards">
-  <% @projects.each do |p| %>
-    <article class="card">
-      <h3><%= link_to p.name, p %></h3>
-      <p class="meta"><%= truncate(p.description.to_s, length: 120) %></p>
-      <hr class="hr">
-      <div style="display:flex;gap:8px;">
-        <%= link_to "Open", p, class: "btn" %>
-        <%= link_to "Edit", edit_project_path(p), class: "btn btn--ghost" %>
-      </div>
-    </article>
+  <% if @projects.any? %>
+    <div class="grid cards">
+      <% @projects.each do |project| %>
+        <article class="card">
+          <h3><%= link_to project.name, project %></h3>
+          <p class="meta"><%= truncate(project.description.to_s.presence || "A calm corner to plan work the Basecamp way.", length: 140) %></p>
+          <p class="meta meta--note">Role: <%= project.owner_id == current_user.id ? "Owner" : "Collaborator" %></p>
+          <hr class="hr">
+          <div class="list-inline">
+            <%= link_to "Open", project, class: "btn btn--primary" %>
+            <% if project.owner_id == current_user.id %>
+              <%= link_to "Edit", edit_project_path(project), class: "btn btn--ghost" %>
+            <% end %>
+          </div>
+        </article>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="empty-state">
+      <p>No projects yet. Base a new one off your next big idea and we’ll organize the rest.</p>
+      <%= link_to "Launch your first project", new_project_path, class: "btn btn--primary" %>
+    </div>
   <% end %>
-</div>
+</section>

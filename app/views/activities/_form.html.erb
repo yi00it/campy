@@ -1,0 +1,95 @@
+<% categories ||= [] %>
+<%= form_with(model: (activity.persisted? ? activity : [project, activity]), local: true) do |form| %>
+  <% if activity.errors.any? %>
+    <div class="flash">
+      <p class="flash__item flash__item--warn">
+        <%= pluralize(activity.errors.count, "error") %> prevented saving:
+        <%= activity.errors.full_messages.to_sentence %>
+      </p>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :title %>
+    <%= form.text_field :title, autofocus: true %>
+  </div>
+
+  <div class="field">
+    <%= form.label :description %>
+    <%= form.text_area :description, rows: 5 %>
+  </div>
+
+  <div class="field">
+    <%= form.label :files, "Attachments" %>
+    <%= form.file_field :files, multiple: true %>
+    <% if activity.files.attached? %>
+      <ul class="attachments-list attachments-list--compact list-reset mt-sm">
+        <% activity.files.each do |file| %>
+          <li class="attachment-chip">
+            <span class="attachment-chip__icon">📎</span>
+            <span class="attachment-chip__meta">
+              <strong><%= file.filename.to_s %></strong>
+              <small><%= number_to_human_size(file.byte_size) %></small>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+
+  <div class="field">
+    <%= form.label :category_id, "Category" %>
+    <% if categories.empty? %>
+      <p class="meta meta--note">
+        No categories yet. <%= link_to "Create one", categories_path %>
+      </p>
+    <% end %>
+    <%= form.collection_select :category_id,
+          categories,
+          :id,
+          :name,
+          { include_blank: "Uncategorized" },
+          { class: "select" } %>
+  </div>
+
+  <div class="field">
+    <%= form.label :start_on, "Start date" %>
+    <%= form.date_field :start_on,
+          data: {
+            controller: "date-picker",
+            action: "focus->date-picker#open click->date-picker#open",
+            date_picker_default_value: activity.new_record?
+          } %>
+  </div>
+
+  <div class="field">
+    <%= form.label :due_on, "Due date" %>
+    <%= form.date_field :due_on,
+          data: {
+            controller: "date-picker",
+            action: "focus->date-picker#open click->date-picker#open",
+            date_picker_default_value: activity.new_record?
+          } %>
+  </div>
+
+  <div class="field">
+    <%= form.label :assignee_id, "Assigned to" %>
+    <%= form.collection_select :assignee_id,
+          @assignable_users,
+          :id,
+          :email,
+          { include_blank: "Unassigned" },
+          { class: "select" } %>
+  </div>
+
+  <div class="field">
+    <label>
+      <%= form.check_box :is_done %> Done
+    </label>
+  </div>
+
+  <div class="actions">
+    <%= form.submit "Save activity", class: "btn btn--primary" %>
+    <%= link_to "Cancel", (activity.persisted? ? activity : project), class: "btn btn--ghost" %>
+  </div>
+<% end %>

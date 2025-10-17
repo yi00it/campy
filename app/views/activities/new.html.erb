@@ -1,0 +1,14 @@
+<section class="section">
+  <header class="section__head">
+    <h1 class="section__title">Plan a new activity</h1>
+    <p class="section__lead">Keep it short, sharp, and reassuring—just like Basecamp. Assign a category and Campy handles the rhythm.</p>
+  </header>
+
+  <div class="card">
+    <%= render "form", activity: @activity, project: @project, categories: @categories %>
+  </div>
+
+  <div class="hero__cta mt-md">
+    <%= link_to "Back to project", project_path(@project), class: "btn btn--text" %>
+  </div>
+</section>

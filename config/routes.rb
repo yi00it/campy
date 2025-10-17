@@ -7,11 +7,18 @@ Rails.application.routes.draw do
   root to: "home#index"
 
   resources :projects do
-  resources :todos, shallow: true do
-    member do
-      patch :toggle_done
+    resources :project_memberships, only: [:create, :destroy]
+    resources :activities, shallow: true do
+      member do
+        patch :toggle_done
+      end
+      resources :comments, only: [:create, :destroy] do
+        resources :comment_reactions, only: [:create]
+      end
     end
-    resources :comments, only: [:create, :destroy]  # if you added comments already
   end
-end
+
+  resources :categories
+
+  get "my-activities", to: "assigned_activities#index", as: :my_activities
 end

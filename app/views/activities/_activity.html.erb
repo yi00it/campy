@@ -1,0 +1,52 @@
+<% show_project = local_assigns.fetch(:show_project, false) %>
+<tr id="<%= dom_id(activity) %>" class="activity-table__row">
+  <td class="activity-table__cell activity-table__cell--primary" data-label="Activity">
+    <div class="activity-table__title">
+      <% status_label, status_class = if activity.is_done
+          ["Done", "pill--done"]
+        elsif activity.start_on.present? && activity.start_on > Date.current
+          ["Planned", "pill--planned"]
+        else
+          ["In progress", ""]
+        end %>
+      <span class="pill <%= status_class %>"><%= status_label %></span>
+      <%= link_to activity.title, activity, data: { turbo_frame: "_top" } %>
+    </div>
+  </td>
+  <td class="activity-table__cell activity-table__cell--date" data-label="Start">
+    <span><%= activity.start_on&.to_fs(:long) || "—" %></span>
+  </td>
+  <td class="activity-table__cell activity-table__cell--date" data-label="Due">
+    <span class="<%= "text-warn" if activity.due_on.present? && activity.due_on < Date.current && !activity.is_done %>">
+      <%= activity.due_on&.to_fs(:long) || "—" %>
+    </span>
+  </td>
+  <td class="activity-table__cell" data-label="Category">
+    <span class="pill pill--sunrise">
+      <%= activity.category&.name || "Uncategorized" %>
+    </span>
+    <% if activity.files.attached? %>
+      <span class="attachment-chip attachment-chip--inline">
+        <span class="attachment-chip__icon">📎</span>
+        <span class="attachment-chip__meta">
+          <strong><%= pluralize(activity.files.count, "file") %></strong>
+        </span>
+      </span>
+    <% end %>
+  </td>
+  <td class="activity-table__cell" data-label="<%= show_project ? 'Project' : 'Assignee' %>">
+    <% if show_project %>
+      <span class="meta"><%= activity.project.name %></span>
+    <% else %>
+      <span class="meta"><%= activity.assignee&.email || "Unassigned" %></span>
+    <% end %>
+  </td>
+  <td class="activity-table__cell activity-table__cell--actions" data-label="Actions">
+    <div class="activity-table__actions">
+      <%= button_to (activity.is_done ? "Mark as undone" : "Mark as done"),
+          toggle_done_activity_path(activity),
+          method: :patch,
+          class: "btn btn--text" %>
+    </div>
+  </td>
+</tr>

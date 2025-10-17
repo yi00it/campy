@@ -1,0 +1,58 @@
+<div id="project-activities">
+  <div class="section__head section__head--tight">
+    <div class="list-inline">
+      <h2 class="section__title section__title--sm">Open activities</h2>
+      <span class="push-right">
+        <%= link_to "New activity", new_project_activity_path(project), class: "btn btn--primary" %>
+      </span>
+    </div>
+  </div>
+
+  <% if active_activities.any? %>
+    <div class="activity-table-wrapper mt-sm">
+      <table class="activity-table" role="grid">
+        <thead>
+          <tr>
+            <th scope="col">Activity</th>
+            <th scope="col">Start</th>
+            <th scope="col">Due</th>
+            <th scope="col">Category</th>
+            <th scope="col">Assignee</th>
+            <th scope="col" class="activity-table__actions-head">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="open-activities-body">
+          <%= render partial: "activities/activity", collection: active_activities, as: :activity %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="empty-state">
+      <p>No activities yet. Draft your first one to set the tone—due dates default to tomorrow so you keep momentum.</p>
+      <%= link_to "Create an activity", new_project_activity_path(project), class: "btn btn--primary" %>
+    </div>
+  <% end %>
+
+  <% if completed_activities.any? %>
+    <section class="mt-lg">
+      <h2 class="section__title section__title--sm">Completed activities</h2>
+      <div class="activity-table-wrapper mt-sm">
+        <table class="activity-table activity-table--completed" role="grid">
+          <thead>
+            <tr>
+              <th scope="col">Activity</th>
+              <th scope="col">Start</th>
+              <th scope="col">Finished</th>
+              <th scope="col">Category</th>
+              <th scope="col">Assignee</th>
+              <th scope="col" class="activity-table__actions-head">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="completed-activities-body">
+            <%= render partial: "activities/activity", collection: completed_activities, as: :activity %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  <% end %>
+</div>

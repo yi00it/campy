@@ -1,0 +1,19 @@
+<%= form_with(model: category, local: true) do |form| %>
+  <% if category.errors.any? %>
+    <div class="flash">
+      <p class="flash__item flash__item--warn">
+        <%= pluralize(category.errors.count, "error") %> prevented saving:
+        <%= category.errors.full_messages.to_sentence %>
+      </p>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :name %>
+    <%= form.text_field :name, autofocus: true %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit (category.persisted? ? "Update category" : "Add category"), class: "btn btn--primary" %>
+  </div>
+<% end %>

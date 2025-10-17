@@ -1,0 +1,139 @@
+<div class="activity-detail stack">
+  <section class="card card--activity">
+    <div class="activity-card__header">
+      <div class="activity-card__summary">
+        <div class="list-inline">
+          <span class="pill<%= " pill--done" if @activity.is_done %>"><%= @activity.is_done ? "Done" : "Open" %></span>
+          <% if @activity.start_on.present? %>
+            <span class="pill pill--frost">Starts <%= @activity.start_on.to_fs(:long) %></span>
+          <% end %>
+          <% if @activity.due_on.present? %>
+            <% due_class = @activity.due_on < Date.current && !@activity.is_done ? " pill--overdue" : "" %>
+            <span class="pill<%= due_class %>">Due <%= @activity.due_on.to_fs(:long) %></span>
+          <% else %>
+            <span class="pill">No due date</span>
+          <% end %>
+          <span class="pill pill--sunrise">
+            <%= @activity.category&.name || "Uncategorized" %>
+          </span>
+        </div>
+
+        <h2 class="section__title section__title--sm mt-sm"><%= @activity.title %></h2>
+        <p class="meta">Part of <%= link_to @activity.project.name, @activity.project %></p>
+      </div>
+
+      <div class="activity-card__share" data-controller="modal">
+        <button type="button" class="btn btn--primary btn--share" data-action="modal#open">Share update</button>
+        <div class="modal" data-modal-target="container" hidden>
+          <div class="modal__backdrop" data-modal-target="backdrop" data-action="click->modal#handleBackdrop" aria-hidden="true"></div>
+          <div class="modal__dialog" data-modal-target="dialog" role="dialog" aria-modal="true">
+            <button type="button" class="modal__close btn btn--text" data-action="modal#close" data-modal-close aria-label="Close update dialog">Close</button>
+            <div class="modal__content">
+              <h3 class="section__title section__title--sm section__title--flush">Share an update</h3>
+              <p class="meta">Keep everyone synced with quick notes and supporting files.</p>
+              <%= form_with(model: [@activity, @update], local: true, html: { multipart: true }) do |form| %>
+                <div class="field">
+                  <%= form.label :body, "What's new?" %>
+                  <%= form.text_area :body, rows: 4 %>
+                </div>
+                <div class="field">
+                  <%= form.label :files, "Attach files" %>
+                  <%= form.file_field :files, multiple: true %>
+                </div>
+                <div class="actions">
+                  <%= form.submit "Post update", class: "btn btn--primary" %>
+                  <button type="button" class="btn btn--ghost" data-action="modal#close" data-modal-close>Cancel</button>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="hr">
+    <div class="stack">
+      <%= simple_format(@activity.description.presence || "Share a few sentences that give teammates clarity and confidence.") %>
+      <div class="list-inline list-inline--spread meta-bar">
+        <span class="meta"><strong>Starts:</strong> <%= @activity.start_on&.to_fs(:long) || "Not set" %></span>
+        <span class="meta"><strong>Due:</strong> <%= @activity.due_on&.to_fs(:long) || "Not set" %></span>
+        <span class="meta"><strong>Assigned to:</strong> <%= @activity.assignee&.email || "Unassigned" %></span>
+      </div>
+    </div>
+
+    <% if @activity.files.attached? %>
+      <div class="attachments-block mt-md">
+        <h3 class="section__title section__title--sm section__title--flush">Files</h3>
+        <ul class="attachments-list list-reset mt-sm">
+          <% @activity.files.each do |file| %>
+            <li class="attachment-chip">
+              <span class="attachment-chip__icon">📎</span>
+              <div class="attachment-chip__meta">
+                <strong><%= link_to file.filename.to_s, rails_blob_path(file, disposition: "attachment") %></strong>
+                <small><%= [file.content_type, number_to_human_size(file.byte_size)].compact.join(" · ") %></small>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="hero__cta mt-md">
+      <%= button_to (@activity.is_done ? "Mark as undone" : "Mark as done"),
+                    toggle_done_activity_path(@activity),
+                    method: :patch,
+                    class: "btn btn--primary",
+                    form: { data: { turbo: true } } %>
+      <%= link_to "Edit", edit_activity_path(@activity), class: "btn btn--ghost" %>
+      <%= link_to "Back to project", project_path(@activity.project), class: "btn btn--text" %>
+    </div>
+  </section>
+
+  <section class="card card--updates">
+    <div class="list-inline list-inline--spread">
+      <h3 class="section__title section__title--sm section__title--flush">Updates</h3>
+      <span class="meta"><%= pluralize(@updates.count, "entry") %></span>
+    </div>
+
+    <% if @updates.any? %>
+      <ul class="updates-list list-reset mt-md">
+        <% @updates.each do |update| %>
+          <li class="update" id="<%= dom_id(update) %>">
+            <header class="update__header">
+              <strong><%= update.author&.email || "Teammate" %></strong>
+              <span class="meta">· <%= time_ago_in_words(update.created_at) %> ago</span>
+            </header>
+            <div class="update__body">
+              <%= simple_format(update.body) %>
+            </div>
+            <% if update.files.attached? %>
+              <div class="update__files">
+                <ul class="attachments-list attachments-list--compact list-reset">
+                  <% update.files.each do |file| %>
+                    <li class="attachment-chip">
+                      <span class="attachment-chip__icon">📎</span>
+                      <div class="attachment-chip__meta">
+                        <strong><%= link_to file.filename.to_s, rails_blob_path(file, disposition: "attachment") %></strong>
+                        <small><%= [file.content_type, number_to_human_size(file.byte_size)].compact.join(" · ") %></small>
+                      </div>
+                    </li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+            <%= turbo_frame_tag dom_id(update, :reactions) do %>
+              <%= render "comments/reactions", comment: update, reaction_emojis: @reaction_emojis %>
+            <% end %>
+            <footer class="update__actions">
+              <%= link_to "Delete update", update,
+                    data: { turbo_method: :delete, turbo_confirm: "Delete this update?" },
+                    class: "btn btn--text" %>
+            </footer>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="empty-state">No updates yet. Drop the first one to set the tone.</div>
+    <% end %>
+  </section>
+</div>

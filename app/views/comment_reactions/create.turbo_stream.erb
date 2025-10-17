@@ -1,0 +1,4 @@
+<%= turbo_stream.replace dom_id(@comment, :reactions), partial: "comments/reactions", locals: {
+      comment: @comment,
+      reaction_emojis: @reaction_emojis
+    } %>

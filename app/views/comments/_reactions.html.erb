@@ -1,0 +1,23 @@
+<% grouped = comment.comment_reactions.group_by(&:emoji) %>
+<div class="update__reactions">
+  <div class="update__reaction-buttons">
+    <% reaction_emojis.each do |emoji| %>
+      <% user_reaction = comment.comment_reactions.find { |r| r.user_id == current_user.id && r.emoji == emoji } %>
+      <%= button_to emoji,
+          comment_comment_reactions_path(comment, emoji: emoji),
+          method: :post,
+          class: ["reaction-btn", ("reaction-btn--active" if user_reaction)].compact.join(" "),
+          form: { data: { turbo_stream: true } } %>
+    <% end %>
+  </div>
+  <% if grouped.present? %>
+    <div class="update__reaction-summary">
+      <% grouped.each do |emoji, reactions| %>
+        <span class="reaction-chip">
+          <span><%= emoji %></span>
+          <span><%= reactions.count %></span>
+        </span>
+      <% end %>
+    </div>
+  <% end %>
+</div>

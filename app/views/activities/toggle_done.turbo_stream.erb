@@ -1,0 +1,10 @@
+<%= turbo_stream.replace "project-activities", partial: "projects/activity_tables", locals: {
+      project: @project,
+      active_activities: @active_activities,
+      completed_activities: @completed_activities
+    } %>
+<%= turbo_stream.replace "project-heartbeat", partial: "projects/heartbeat_card", locals: {
+      project: @project,
+      active_count: @active_count,
+      completed_count: @completed_count
+    } %>

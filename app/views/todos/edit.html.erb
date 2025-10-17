@@ -1,9 +1,0 @@
-<%= turbo_frame_tag dom_id(@todo) do %>
-  <div class="card">
-    <h1 style="margin:0 0 10px;">Edit Todo</h1>
-    <%= render "form", todo: @todo, project: @todo.project %>
-    <p style="margin-top:10px;">
-      <%= link_to "Cancel", todo_path(@todo), data: { turbo_frame: dom_id(@todo) }, class: "btn btn--ghost" %>
-    </p>
-  </div>
-<% end %>

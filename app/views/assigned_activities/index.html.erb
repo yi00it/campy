@@ -1,0 +1,33 @@
+<section class="section">
+  <header class="section__head">
+    <div class="list-inline">
+      <span class="pill pill--sunrise">Assigned work</span>
+      <span class="pill"><%= pluralize(@activities.size, "activity") %></span>
+    </div>
+    <h1 class="section__title">Your activity lineup</h1>
+    <p class="section__lead">Track everything assigned to you across projects in one place.</p>
+  </header>
+
+  <% if @activities.any? %>
+    <div class="activity-table-wrapper">
+      <table class="activity-table" role="grid">
+        <thead>
+          <tr>
+            <th scope="col">Activity</th>
+            <th scope="col">Schedule</th>
+            <th scope="col">Category & files</th>
+            <th scope="col">Project</th>
+            <th scope="col" class="activity-table__actions-head">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <%= render partial: "activities/activity", collection: @activities, as: :activity, locals: { show_project: true } %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="empty-state">
+      <p>No activities on your plate yet. Stay tuned!</p>
+    </div>
+  <% end %>
+</section>

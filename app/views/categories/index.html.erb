@@ -1,0 +1,44 @@
+<section class="section">
+  <header class="section__head">
+    <div class="list-inline">
+      <span class="pill">Categories</span>
+      <span class="pill pill--sunrise">Color-code the work</span>
+    </div>
+    <h1 class="section__title">Keep activities organized with calm, crafted categories.</h1>
+    <p class="section__lead">Add a handful of fixed categories so activities feel intentional. Think Basecamp’s "To-dos" meets "Hill Charts" labels.</p>
+    <div class="hero__cta">
+      <%= link_to "Back to projects", projects_path, class: "btn btn--text" %>
+    </div>
+  </header>
+
+  <div class="split">
+    <div class="stack">
+      <div class="card">
+        <h2 class="section__title section__title--sm section__title--flush">Existing categories</h2>
+        <% if @categories.any? %>
+          <ul class="stack list-reset mt-md">
+            <% @categories.each do |category| %>
+              <li class="card card--flat">
+                <div class="list-inline list-inline--spread">
+                  <strong><%= category.name %></strong>
+                  <span class="list-inline">
+                    <%= link_to "Edit", edit_category_path(category), class: "btn btn--ghost" %>
+                    <%= link_to "Delete", category, data: { turbo_method: :delete, turbo_confirm: "Delete category '#{category.name}'?" }, class: "btn btn--text" %>
+                  </span>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <div class="empty-state">No categories yet. Add a few like “Planning”, “Design”, or “Launch”.</div>
+        <% end %>
+      </div>
+    </div>
+
+    <aside class="card">
+      <h2 class="section__title section__title--sm section__title--flush">Add a category</h2>
+      <p class="meta">Stick with a short verb or noun. Keep it friendly—think Basecamp’s voice.</p>
+      <%= render "form", category: @category %>
+    </aside>
+  </div>
+</section>

@@ -1,0 +1,15 @@
+<section class="section">
+  <header class="section__head">
+    <h1 class="section__title">Polish this activity</h1>
+    <p class="section__lead">Adjust the details, category, or due date. Campy keeps the Basecamp-style calm intact.</p>
+  </header>
+
+  <div class="card">
+    <%= render "form", activity: @activity, project: @project, categories: @categories %>
+  </div>
+
+  <div class="hero__cta mt-md">
+    <%= link_to "Back to project", project_path(@project), class: "btn btn--text" %>
+    <%= link_to "View activity", @activity, class: "btn btn--ghost" %>
+  </div>
+</section>

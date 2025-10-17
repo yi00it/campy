@@ -1,21 +1,65 @@
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-  <h1 style="margin:0;"><%= @project.name %></h1>
-  <div style="display:flex;gap:8px;">
-    <%= link_to "Edit", edit_project_path(@project), class: "btn btn--ghost" %>
-    <%= link_to "Delete", @project, data: { turbo_method: :delete, turbo_confirm: "Delete project?" }, class: "btn btn--ghost" %>
-    <%= link_to "Back", projects_path, class: "btn" %>
+<section class="section">
+  <header class="section__head section__head--wide">
+    <div class="section__headline">
+      <h1 class="section__title"><%= @project.name %></h1>
+      <div class="section__lead">
+        <%= simple_format(@project.description.presence || "Give your project a friendly intro so the team knows what success looks like.") %>
+      </div>
+    </div>
+    <div class="section__actions">
+      <% if @project.owner == current_user %>
+        <%= link_to "Edit project", edit_project_path(@project), class: "btn btn--ghost" %>
+      <% end %>
+      <%= link_to "Back to projects", projects_path, class: "btn btn--text" %>
+    </div>
+  </header>
+
+  <div class="split">
+    <div class="stack">
+      <%= render "projects/activity_tables",
+          project: @project,
+          active_activities: @active_activities,
+          completed_activities: @completed_activities %>
+    </div>
+
+    <aside class="stack">
+      <%= render "projects/heartbeat_card",
+          project: @project,
+          active_count: @active_count,
+          completed_count: @completed_count %>
+
+      <div class="card">
+        <h3 class="section__title section__title--sm section__title--flush">Team</h3>
+        <p class="meta">Add teammates so they can add updates, assign activities, and keep things moving.</p>
+        <ul class="list-reset stack mt-md">
+          <li class="list-inline list-inline--spread">
+            <span><strong><%= @project.owner.email %></strong> <span class="meta">(Owner)</span></span>
+          </li>
+          <% @project_memberships.each do |membership| %>
+            <li class="list-inline list-inline--spread">
+              <span><strong><%= membership.user.email %></strong></span>
+              <% if @project.owner == current_user %>
+                <%= link_to "Remove", project_project_membership_path(@project, membership),
+                            data: { turbo_method: :delete, turbo_confirm: "Remove #{membership.user.email}?" },
+                            class: "btn btn--text" %>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+
+        <% if @project.owner == current_user %>
+          <hr class="hr">
+          <%= form_with(model: [@project, @membership], url: project_project_memberships_path(@project), local: true) do |form| %>
+            <div class="field">
+              <%= form.label :email, "Invite by email" %>
+              <%= form.email_field :email, placeholder: "teammate@example.com" %>
+            </div>
+            <div class="actions">
+              <%= form.submit "Add teammate", class: "btn btn--primary" %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </aside>
   </div>
-</div>
-
-<p class="meta"><%= simple_format(@project.description) %></p>
-<hr class="hr">
-
-<div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0 6px;">
-  <h2 style="margin:0;">Todos</h2>
-  <%= link_to "New Todo", new_project_todo_path(@project), class: "btn" %>
-</div>
-
-<div class="grid cards">
-  <%= render partial: "todos/todo", collection: @todos, as: :todo %>
-</div>
-</div>
+</section>

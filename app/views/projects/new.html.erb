@@ -1,11 +1,14 @@
-<% content_for :title, "New project" %>
+<section class="section">
+  <header class="section__head">
+    <h1 class="section__title">Create a new project</h1>
+    <p class="section__lead">Kick off something fresh. Keep the voice friendly, inviting, and Basecamp-inspired.</p>
+  </header>
 
-<h1>New project</h1>
+  <div class="card">
+    <%= render "form", project: @project %>
+  </div>
 
-<%= render "form", project: @project %>
-
-<br>
-
-<div>
-  <%= link_to "Back to projects", projects_path %>
-</div>
+  <div class="hero__cta mt-md">
+    <%= link_to "Back to projects", projects_path, class: "btn btn--text" %>
+  </div>
+</section>

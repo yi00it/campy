@@ -1,2 +1,44 @@
-<h1>Welcome</h1>
-<p><%= link_to "Sign up", new_user_registration_path %> or <%= link_to "Sign in", new_user_session_path %></p>
+<section class="hero">
+  <div class="hero__card">
+    <span class="hero__prehead">Your team’s calm and collected HQ</span>
+    <h1 class="hero__title">All your projects, activities, and notes under one roof.</h1>
+    <p class="hero__lead">
+      Campy gives your team the calm clarity of Basecamp with a focused spin for your own projects.
+      Plan activities, assign categories, and keep conversations threaded in one friendly workspace.
+    </p>
+    <div class="hero__cta">
+      <%= link_to "Start for free", new_user_registration_path, class: "btn btn--primary" %>
+      <%= link_to "See how it works", new_user_session_path, class: "btn btn--ghost" %>
+    </div>
+  </div>
+  <div class="hero__sparkle"></div>
+</section>
+
+<section class="section">
+  <header class="section__head">
+    <h2 class="section__title">What you’ll love</h2>
+    <p class="section__lead">
+      Borrowed from the spirit of Basecamp’s famous homepage—minus the chaos. Campy keeps things light, bright,
+      and approachable so your team actually wants to log in every day.
+    </p>
+  </header>
+
+  <div class="grid cards">
+    <article class="card">
+      <h3>Activities > Todos</h3>
+      <p class="meta">Group work with categories, due dates, and quick status toggles. Everything is snappy and feels good.</p>
+    </article>
+    <article class="card">
+      <h3>Friendly messaging</h3>
+      <p class="meta">Add updates to any activity and keep the discussion right where the work happens—never search Slack again.</p>
+    </article>
+    <article class="card">
+      <h3>Clear owners</h3>
+      <p class="meta">Projects live with their owners. Permissions keep the right people in-the-know, automatically.</p>
+    </article>
+    <article class="card">
+      <h3>Reassuring rhythm</h3>
+      <p class="meta">A calm visual style, soft shadows, and bright accents inspired by Basecamp remit anxiety and give breathing room.</p>
+    </article>
+  </div>
+</section>
