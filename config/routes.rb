@@ -27,5 +27,7 @@ Rails.application.routes.draw do
     resources :messages, only: [:create]
   end
 
+  resource :settings, only: [:show, :update], controller: "settings"
+
   get "my-activities", to: "assigned_activities#index", as: :my_activities
 end

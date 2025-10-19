@@ -9,14 +9,12 @@ class ActivitiesController < ApplicationController
   def show
     return unless authorize_project!(@activity.project)
 
-    if defined?(Comment)
-      @update  = Comment.new
-      @updates = @activity.comments.includes(:comment_reactions).with_attached_files.order(created_at: :desc)
-      @reaction_emojis = REACTION_EMOJIS
-    else
-      @update  = nil
-      @updates = []
-    end
+    @update  = Comment.new
+    @updates = @activity.comments.roots
+                           .includes(:author, :comment_reactions, replies: [:author, :comment_reactions])
+                           .with_attached_files
+                           .order(created_at: :desc)
+    @reaction_emojis = REACTION_EMOJIS
   end
 
   def new
@@ -44,21 +42,9 @@ class ActivitiesController < ApplicationController
     return unless authorize_project!(@activity.project)
 
     if @activity.update(activity_params)
-      respond_to do |format|
-        format.turbo_stream do
-          render turbo_stream: turbo_stream.replace(
-            @activity,
-            partial: "activities/activity",
-            locals: { activity: @activity }
-          )
-        end
-        format.html { redirect_to @activity, notice: "Activity updated." }
-      end
+      redirect_to @activity, notice: "Activity updated."
     else
-      respond_to do |format|
-        format.turbo_stream { render :edit, status: :unprocessable_entity }
-        format.html         { render :edit, status: :unprocessable_entity }
-      end
+      render :edit, status: :unprocessable_entity
     end
   end
 

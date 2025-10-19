@@ -48,10 +48,42 @@ module Reports
     end
 
     def draw_timeline(pdf)
+      y_cursor = nil
       column_x = pdf.bounds.left
       grid_width = pdf.bounds.width - LEFT_COLUMN_WIDTH
       day_width = grid_width / total_days.to_f
 
+      if activities.any?
+        draw_timeline_header(pdf, column_x, grid_width, day_width)
+        y_cursor = pdf.cursor
+
+        activities.each do |activity|
+          if y_cursor < FOOTER_HEIGHT + BAR_HEIGHT
+            pdf.start_new_page
+            draw_header(pdf)
+
+            column_x = pdf.bounds.left
+            grid_width = pdf.bounds.width - LEFT_COLUMN_WIDTH
+            day_width = grid_width / total_days.to_f
+
+            draw_timeline_header(pdf, column_x, grid_width, day_width)
+            y_cursor = pdf.cursor
+          end
+
+          draw_activity_row(pdf, activity, column_x, grid_width, day_width, y_cursor)
+          y_cursor -= (BAR_HEIGHT + BAR_GAP)
+        end
+      else
+        draw_timeline_header(pdf, column_x, grid_width, day_width)
+      end
+
+      summary_cursor = y_cursor || pdf.cursor
+      pdf.move_cursor_to(summary_cursor)
+      pdf.move_down 20
+      draw_project_summary(pdf)
+    end
+
+    def draw_timeline_header(pdf, column_x, grid_width, day_width)
       pdf.bounding_box([column_x, pdf.cursor], width: LEFT_COLUMN_WIDTH, height: 20) do
         pdf.text "Activity", size: 12, style: :bold
       end
@@ -67,32 +99,23 @@ module Reports
         pdf.stroke_horizontal_rule
       end
       pdf.move_down 10
+    end
 
-      y_cursor = pdf.cursor
-
-      activities.each do |activity|
-        break if y_cursor < FOOTER_HEIGHT + BAR_HEIGHT
-
-        pdf.bounding_box([column_x, y_cursor], width: LEFT_COLUMN_WIDTH, height: BAR_HEIGHT + BAR_GAP) do
-          pdf.text activity.title, size: 10, style: :bold
-          pdf.move_down 2
-          meta = []
-          meta << (activity.assignee&.email || "Unassigned")
-          if activity.start_on && activity.due_on
-            meta << "#{I18n.l(activity.start_on)} – #{I18n.l(activity.due_on)}"
-          end
-          pdf.text meta.join("  •  "), size: 8, color: "666666"
+    def draw_activity_row(pdf, activity, column_x, grid_width, day_width, y_cursor)
+      pdf.bounding_box([column_x, y_cursor], width: LEFT_COLUMN_WIDTH, height: BAR_HEIGHT + BAR_GAP) do
+        pdf.text activity.title, size: 10, style: :bold
+        pdf.move_down 2
+        meta = []
+        meta << (activity.assignee&.email || "Unassigned")
+        if activity.start_on && activity.due_on
+          meta << "#{I18n.l(activity.start_on)} – #{I18n.l(activity.due_on)}"
         end
-
-        pdf.bounding_box([column_x + LEFT_COLUMN_WIDTH, y_cursor], width: grid_width, height: BAR_HEIGHT + BAR_GAP) do
-          draw_activity_bar(pdf, activity, day_width)
-        end
-
-        y_cursor -= (BAR_HEIGHT + BAR_GAP)
+        pdf.text meta.join("  •  "), size: 8, color: "666666"
       end
 
-      pdf.move_down 20
-      draw_project_summary(pdf)
+      pdf.bounding_box([column_x + LEFT_COLUMN_WIDTH, y_cursor], width: grid_width, height: BAR_HEIGHT + BAR_GAP) do
+        draw_activity_bar(pdf, activity, day_width)
+      end
     end
 
     def draw_activity_bar(pdf, activity, day_width)

@@ -20,10 +20,7 @@ class ConversationsController < ApplicationController
   private
 
   def find_or_create_conversation_with(user)
-    existing = Conversation.between([current_user.id, user.id]).joins(:conversation_memberships)
-                             .group("conversations.id")
-                             .having("COUNT(DISTINCT conversation_memberships.user_id) = 2")
-    conversation = existing.first
+    conversation = Conversation.between([current_user.id, user.id]).first
     return conversation if conversation
 
     Conversation.transaction do

@@ -3,11 +3,16 @@ class CommentsController < ApplicationController
     @activity = Activity.find(params[:activity_id])
     return unless authorize_project!(@activity.project)
 
-    update = @activity.comments.new(comment_params.merge(author: current_user))
-    if update.save
-      redirect_to @activity, notice: "Update added."
+    parent_comment = params[:comment][:parent_id].present? ? @activity.comments.find_by(id: params[:comment][:parent_id]) : nil
+
+    comment_attrs = comment_params.except(:parent_id).merge(author: current_user)
+    comment = @activity.comments.new(comment_attrs)
+    comment.parent = parent_comment if parent_comment.present?
+
+    if comment.save
+      redirect_to @activity, notice: (parent_comment ? "Reply added." : "Update added.")
     else
-      redirect_to @activity, alert: "Update failed."
+      redirect_to @activity, alert: (parent_comment ? "Reply failed." : "Update failed.")
     end
   end
 
@@ -23,11 +28,11 @@ class CommentsController < ApplicationController
   private
 
   def comment_params
-    params.require(:comment).permit(:body, files: [])
+    params.require(:comment).permit(:body, :parent_id, files: [])
   end
 
   def authorize_project!(project)
-    return true if project.owner_id == current_user.id
+    return true if project.accessible_by?(current_user)
 
     redirect_to projects_path, alert: "Not allowed."
     false

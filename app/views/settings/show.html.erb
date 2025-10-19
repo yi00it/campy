@@ -1,0 +1,94 @@
+<section class="section">
+  <header class="section__head">
+    <div class="section__headline">
+      <span class="pill">Account</span>
+      <h1 class="section__title">Personal settings</h1>
+    </div>
+    <p class="section__lead">Fine-tune how you show up in Campy, from display details to theme and password.</p>
+  </header>
+
+  <div class="card">
+    <%= form_with model: @user, url: settings_path, method: :patch, local: true, html: { multipart: true } do |form| %>
+      <% if @user.errors.any? %>
+        <div class="flash">
+          <p class="flash__item flash__item--warn">
+            <%= pluralize(@user.errors.count, "issue") %> needs attention:
+            <%= @user.errors.full_messages.to_sentence %>
+          </p>
+        </div>
+      <% end %>
+
+      <fieldset class="stack">
+        <legend class="section__title section__title--sm section__title--flush">Profile</legend>
+
+        <div class="stack">
+          <div class="field">
+            <%= form.label :username, "Username" %>
+            <%= form.text_field :username, placeholder: "e.g. project-pro" %>
+            <p class="meta meta--note">Displayed to teammates alongside your messages and updates.</p>
+          </div>
+
+          <div class="field">
+            <%= form.label :avatar, "Profile photo" %>
+            <% if @user.avatar.attached? %>
+              <div class="stack" style="max-width: 200px;">
+                <% if @user.avatar.variable? %>
+                  <%= image_tag @user.avatar.variant(resize_to_fill: [160, 160]).processed, alt: "Profile photo preview", class: "avatar-preview" %>
+                <% else %>
+                  <p class="meta meta--note">Preview unavailable for this file type.</p>
+                <% end %>
+                <label class="meta meta--note">
+                  <%= form.check_box :remove_avatar %> Remove current photo
+                </label>
+              </div>
+            <% end %>
+            <%= form.file_field :avatar, direct_upload: true %>
+            <p class="meta meta--note">Use a square image (PNG or JPG, 5MB max).</p>
+          </div>
+        </div>
+      </fieldset>
+
+      <hr class="hr">
+
+      <fieldset class="stack">
+        <legend class="section__title section__title--sm section__title--flush">Appearance</legend>
+        <div class="field">
+          <%= form.label :preferred_theme, "Theme" %>
+          <%= form.select :preferred_theme, [["Light", "light"], ["Dark", "dark"]], {}, class: "select" %>
+          <p class="meta meta--note">Choose the default look for the app when you sign in.</p>
+        </div>
+      </fieldset>
+
+      <hr class="hr">
+
+      <fieldset class="stack">
+        <legend class="section__title section__title--sm section__title--flush">Password</legend>
+        <p class="meta meta--note">Only fill these fields if you want to change your password.</p>
+        <div class="split">
+          <div class="stack">
+            <div class="field">
+              <%= form.label :password, "New password" %>
+              <%= form.password_field :password, autocomplete: "new-password" %>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="field">
+              <%= form.label :password_confirmation, "Confirm new password" %>
+              <%= form.password_field :password_confirmation, autocomplete: "new-password" %>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <%= form.label :current_password, "Current password" %>
+          <%= form.password_field :current_password, autocomplete: "current-password" %>
+          <p class="meta meta--note">Required to confirm password changes.</p>
+        </div>
+      </fieldset>
+
+      <div class="actions">
+        <%= form.submit "Save settings", class: "btn btn--primary" %>
+        <%= link_to "Cancel", authenticated_root_path, class: "btn btn--ghost" %>
+      </div>
+    <% end %>
+  </div>
+</section>

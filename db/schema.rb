@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_17_120000) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_17_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -53,19 +53,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_17_120000) do
     t.date "due_on"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "category_id"
+    t.bigint "discipline_id"
     t.bigint "assignee_id"
     t.date "start_on"
+    t.bigint "zone_id"
+    t.integer "duration_days"
     t.index ["assignee_id"], name: "index_activities_on_assignee_id"
-    t.index ["category_id"], name: "index_activities_on_category_id"
+    t.index ["discipline_id"], name: "index_activities_on_discipline_id"
     t.index ["project_id"], name: "index_activities_on_project_id"
-  end
-
-  create_table "categories", force: :cascade do |t|
-    t.string "name", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["name"], name: "index_categories_on_name", unique: true
+    t.index ["zone_id"], name: "index_activities_on_zone_id"
   end
 
   create_table "comment_reactions", force: :cascade do |t|
@@ -85,7 +81,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_17_120000) do
     t.integer "author_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "parent_id"
     t.index ["activity_id"], name: "index_comments_on_activity_id"
+    t.index ["parent_id"], name: "index_comments_on_parent_id"
   end
 
   create_table "conversation_memberships", force: :cascade do |t|
@@ -102,6 +100,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_17_120000) do
   create_table "conversations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "disciplines", force: :cascade do |t|
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_disciplines_on_name", unique: true
   end
 
   create_table "messages", force: :cascade do |t|
@@ -141,18 +146,30 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_17_120000) do
     t.datetime "remember_created_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "username"
+    t.string "preferred_theme", default: "light", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["username"], name: "index_users_on_username", unique: true
+  end
+
+  create_table "zones", force: :cascade do |t|
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_zones_on_name", unique: true
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "activities", "categories"
+  add_foreign_key "activities", "disciplines"
   add_foreign_key "activities", "projects"
   add_foreign_key "activities", "users", column: "assignee_id"
+  add_foreign_key "activities", "zones"
   add_foreign_key "comment_reactions", "comments"
   add_foreign_key "comment_reactions", "users"
   add_foreign_key "comments", "activities"
+  add_foreign_key "comments", "comments", column: "parent_id"
   add_foreign_key "conversation_memberships", "conversations"
   add_foreign_key "conversation_memberships", "users"
   add_foreign_key "messages", "conversations"

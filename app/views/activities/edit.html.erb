@@ -11,5 +11,8 @@
   <div class="hero__cta mt-md">
     <%= link_to "Back to project", project_path(@project), class: "btn btn--text" %>
     <%= link_to "View activity", @activity, class: "btn btn--ghost" %>
+    <%= link_to "Delete activity", @activity,
+          data: { turbo_method: :delete, turbo_confirm: "Delete this activity?" },
+          class: "btn btn--ghost btn--delete" %>
   </div>
 </section>

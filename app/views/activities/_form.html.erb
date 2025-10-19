@@ -1,6 +1,6 @@
 <% disciplines ||= [] %>
 <% zones ||= [] %>
-<%= form_with(model: (activity.persisted? ? activity : [project, activity]), local: true) do |form| %>
+<%= form_with(model: (activity.persisted? ? activity : [project, activity]), local: true, data: { controller: "duration" }) do |form| %>
   <% if activity.errors.any? %>
     <div class="flash">
       <p class="flash__item flash__item--warn">
@@ -72,10 +72,20 @@
     <%= form.label :start_on, "Start date" %>
     <%= form.date_field :start_on,
           data: {
+            duration_target: "start",
             controller: "date-picker",
-            action: "focus->date-picker#open click->date-picker#open",
+            action: "focus->date-picker#open click->date-picker#open change->duration#recalculate input->duration#recalculate",
             date_picker_default_value: activity.new_record?
           } %>
+  </div>
+
+  <div class="field">
+    <%= form.label :duration_days, "Duration (days)" %>
+    <%= form.number_field :duration_days,
+          min: 1,
+          placeholder: "e.g. 5",
+          data: { duration_target: "duration", action: "input->duration#recalculate change->duration#recalculate" } %>
+    <p class="meta meta--note">Optional. Updates finish automatically from the start date.</p>
   </div>
 
   <div class="field">
@@ -84,7 +94,8 @@
           data: {
             controller: "date-picker",
             action: "focus->date-picker#open click->date-picker#open",
-            date_picker_default_value: activity.new_record?
+            date_picker_default_value: activity.new_record?,
+            duration_target: "due"
           } %>
   </div>
 

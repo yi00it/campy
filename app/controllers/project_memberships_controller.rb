@@ -18,11 +18,16 @@ class ProjectMembershipsController < ApplicationController
       redirect_to @project, alert: "That user is already on the project." and return
     end
 
-    if @project.project_memberships.create(user: user)
+    membership = @project.project_memberships.build(user: user)
+
+    if membership.save
       redirect_to @project, notice: "#{user.email} added to the project."
     else
-      redirect_to @project, alert: "Could not add that user."
+      message = membership.errors.full_messages.to_sentence.presence || "Could not add that user."
+      redirect_to @project, alert: message
     end
+  rescue ActiveRecord::RecordNotUnique
+    redirect_to @project, alert: "That user is already on the project."
   end
 
   def destroy

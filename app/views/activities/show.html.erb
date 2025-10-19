@@ -129,6 +129,39 @@
             <%= turbo_frame_tag dom_id(update, :reactions) do %>
               <%= render "comments/reactions", comment: update, reaction_emojis: @reaction_emojis %>
             <% end %>
+            <% if update.replies.any? %>
+              <div class="update__replies">
+                <% update.replies.order(:created_at).each do |reply| %>
+                  <div class="update__reply" id="<%= dom_id(reply) %>">
+                    <header class="update__reply-header">
+                      <strong><%= reply.author&.email || "Teammate" %></strong>
+                      <span class="meta">· <%= time_ago_in_words(reply.created_at) %> ago</span>
+                    </header>
+                    <div class="update__reply-body">
+                      <%= simple_format(reply.body) %>
+                    </div>
+                    <footer class="update__reply-actions">
+                      <%= turbo_frame_tag dom_id(reply, :reactions) do %>
+                        <%= render "comments/reactions", comment: reply, reaction_emojis: @reaction_emojis %>
+                      <% end %>
+                      <%= link_to "Delete", reply, data: { turbo_method: :delete, turbo_confirm: "Delete this reply?" }, class: "btn btn--text" %>
+                    </footer>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+            <div class="update__reply-form">
+              <%= form_with(model: [@activity, Comment.new], local: true, class: "reply-form") do |form| %>
+                <%= form.hidden_field :parent_id, value: update.id %>
+                <div class="field">
+                  <%= form.label :body, "Add a reply", class: "visually-hidden" %>
+                  <%= form.text_area :body, rows: 2, placeholder: "Write a comment…" %>
+                </div>
+                <div class="actions">
+                  <%= form.submit "Reply", class: "btn btn--ghost" %>
+                </div>
+              <% end %>
+            </div>
             <footer class="update__actions">
               <%= link_to "Delete update", update,
                     data: { turbo_method: :delete, turbo_confirm: "Delete this update?" },

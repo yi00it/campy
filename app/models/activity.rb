@@ -8,8 +8,10 @@ class Activity < ApplicationRecord
 
   validates :title, presence: true
   validates :start_on, presence: true
+  validates :duration_days, numericality: { greater_than: 0 }, allow_blank: true
   validate :due_on_not_before_start
   validate :assignee_is_part_of_project
+  before_validation :set_due_on_from_duration
 
   after_initialize :set_default_dates, if: :new_record?
 
@@ -18,6 +20,11 @@ class Activity < ApplicationRecord
   def set_default_dates
     self.start_on ||= Date.current
     self.due_on ||= Date.current.tomorrow
+  end
+
+  def set_due_on_from_duration
+    return unless duration_days.present? && start_on.present?
+    self.due_on = start_on + duration_days.to_i.days
   end
 
   def due_on_not_before_start
