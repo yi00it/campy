@@ -1,0 +1,7 @@
+<div class="message" id="<%= dom_id(message) %>">
+  <div class="message__meta">
+    <span class="message__author"><%= message.user.email %></span>
+    <span class="message__time"><%= l(message.created_at, format: :short) %></span>
+  </div>
+  <p class="message__body"><%= simple_format(message.body) %></p>
+</div>

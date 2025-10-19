@@ -1,0 +1,28 @@
+<section class="section">
+  <header class="section__head">
+    <h1 class="section__title">Conversation</h1>
+    <p class="section__lead">Chat with <%= @users.where.not(id: current_user.id).map(&:email).to_sentence %></p>
+  </header>
+
+  <div class="split">
+    <div class="card conversation-window" data-controller="messages">
+      <%= turbo_stream_from @conversation %>
+      <div class="conversation-messages" id="<%= dom_id(@conversation, :messages) %>">
+        <%= render @messages %>
+      </div>
+      <%= render "messages/form", conversation: @conversation, message: @message %>
+    </div>
+
+    <aside class="card">
+      <h2 class="section__title section__title--sm section__title--flush">Participants</h2>
+      <ul class="list-reset stack mt-md">
+        <% @users.each do |user| %>
+          <li><strong><%= user.email %></strong></li>
+        <% end %>
+      </ul>
+      <div class="hero__cta mt-md">
+        <%= link_to "Back to conversations", conversations_path, class: "btn btn--ghost" %>
+      </div>
+    </aside>
+  </div>
+</section>

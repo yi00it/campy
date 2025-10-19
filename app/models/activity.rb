@@ -1,6 +1,7 @@
 class Activity < ApplicationRecord
   belongs_to :project
-  belongs_to :category, optional: true
+  belongs_to :discipline, optional: true
+  belongs_to :zone, optional: true
   belongs_to :assignee, class_name: "User", optional: true
   has_many :comments, dependent: :destroy
   has_many_attached :files

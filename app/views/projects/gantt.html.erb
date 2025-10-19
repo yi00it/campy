@@ -1,0 +1,58 @@
+<section class="section">
+  <header class="section__head">
+    <div class="list-inline">
+      <span class="pill">Report</span>
+      <span class="pill pill--sunrise">Gantt chart</span>
+    </div>
+    <h1 class="section__title"><%= @project.name %> timeline</h1>
+    <p class="section__lead">Visualizes activity schedule inspired by Primavera/MS Project.</p>
+    <div class="hero__cta">
+      <%= link_to "Back to project", project_path(@project), class: "btn btn--ghost" %>
+      <%= link_to "Download PDF", gantt_project_path(@project, format: :pdf), class: "btn btn--primary" %>
+    </div>
+  </header>
+
+  <% if @activities.any? %>
+    <div class="gantt">
+      <% total_days = gantt_total_days(@timeline_start, @timeline_end) %>
+      <div class="gantt__header">
+        <div class="gantt__label">Activity</div>
+        <div class="gantt__timeline" style="grid-template-columns: repeat(<%= total_days %>, minmax(32px, 1fr));">
+          <% (@timeline_start..@timeline_end).each do |date| %>
+            <div class="gantt__timeline-cell <%= 'gantt__timeline-cell--weekend' if date.saturday? || date.sunday? %>" title="<%= l(date) %>">
+              <span><%= date.strftime('%d') %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <% @activities.each do |activity| %>
+        <div class="gantt__row">
+          <div class="gantt__label">
+            <strong><%= activity.title %></strong>
+            <span class="meta">
+              <%= activity.assignee&.email || 'Unassigned' %>
+            </span>
+          </div>
+          <div class="gantt__bars">
+            <div class="gantt__grid" style="grid-template-columns: repeat(<%= total_days %>, minmax(32px, 1fr));">
+              <% (@timeline_start..@timeline_end).each do |date| %>
+                <div class="gantt__grid-cell <%= 'gantt__timeline-cell--weekend' if date.saturday? || date.sunday? %>"></div>
+              <% end %>
+            </div>
+            <div class="gantt__bar" style="<%= gantt_bar_style(@timeline_start, @timeline_end, activity) %>">
+              <span class="gantt__bar-text">
+                <%= activity.start_on&.to_fs(:long) || 'N/A' %> – <%= activity.due_on&.to_fs(:long) || 'N/A' %>
+              </span>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="empty-state">
+      <p>No activities yet. Once you add some, their schedule will appear here.</p>
+      <%= link_to "Create an activity", new_project_activity_path(@project), class: "btn btn--primary" %>
+    </div>
+  <% end %>
+</section>

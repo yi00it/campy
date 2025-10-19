@@ -1,17 +1,19 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
 one:
   project: one
-  category: one
-  title: MyString
-  description: MyText
+  zone: lobby
+  discipline: structure
+  title: Structural Frame
+  description: Install columns and beams
   is_done: false
+  start_on: 2025-10-01
   due_on: 2025-10-16
 
 two:
   project: two
-  category: two
-  title: MyString
-  description: MyText
+  zone: rooms
+  discipline: fitout
+  title: Interior Fitout
+  description: Guest room finishing
   is_done: false
+  start_on: 2025-10-05
   due_on: 2025-10-16

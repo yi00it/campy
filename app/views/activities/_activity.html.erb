@@ -1,4 +1,5 @@
 <% show_project = local_assigns.fetch(:show_project, false) %>
+<% completed = local_assigns.fetch(:completed, false) %>
 <tr id="<%= dom_id(activity) %>" class="activity-table__row">
   <td class="activity-table__cell activity-table__cell--primary" data-label="Activity">
     <div class="activity-table__title">
@@ -13,26 +14,27 @@
       <%= link_to activity.title, activity, data: { turbo_frame: "_top" } %>
     </div>
   </td>
-  <td class="activity-table__cell activity-table__cell--date" data-label="Start">
-    <span><%= activity.start_on&.to_fs(:long) || "—" %></span>
-  </td>
-  <td class="activity-table__cell activity-table__cell--date" data-label="Due">
-    <span class="<%= "text-warn" if activity.due_on.present? && activity.due_on < Date.current && !activity.is_done %>">
-      <%= activity.due_on&.to_fs(:long) || "—" %>
-    </span>
-  </td>
-  <td class="activity-table__cell" data-label="Category">
-    <span class="pill pill--sunrise">
-      <%= activity.category&.name || "Uncategorized" %>
-    </span>
+  <td class="activity-table__cell" data-label="Zone">
+    <span class="meta"><%= activity.zone&.name || "—" %></span>
     <% if activity.files.attached? %>
-      <span class="attachment-chip attachment-chip--inline">
+      <span class="attachment-chip attachment-chip--inline" style="margin-top:4px; display:inline-flex;">
         <span class="attachment-chip__icon">📎</span>
         <span class="attachment-chip__meta">
           <strong><%= pluralize(activity.files.count, "file") %></strong>
         </span>
       </span>
     <% end %>
+  </td>
+  <td class="activity-table__cell" data-label="Discipline">
+    <span class="meta"><%= activity.discipline&.name || "—" %></span>
+  </td>
+  <td class="activity-table__cell activity-table__cell--date" data-label="Start">
+    <span><%= activity.start_on&.to_fs(:long) || "—" %></span>
+  </td>
+  <td class="activity-table__cell activity-table__cell--date" data-label="<%= completed ? 'Finished' : 'Due' %>">
+    <span class="<%= "text-warn" if activity.due_on.present? && activity.due_on < Date.current && !activity.is_done %>">
+      <%= activity.due_on&.to_fs(:long) || "—" %>
+    </span>
   </td>
   <td class="activity-table__cell" data-label="<%= show_project ? 'Project' : 'Assignee' %>">
     <% if show_project %>

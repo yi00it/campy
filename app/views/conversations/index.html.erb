@@ -1,0 +1,42 @@
+<section class="section">
+  <header class="section__head">
+    <h1 class="section__title">Messages</h1>
+    <p class="section__lead">Start a conversation with teammates and keep collaboration flowing.</p>
+  </header>
+
+  <div class="split">
+    <div class="stack">
+      <div class="card">
+        <h2 class="section__title section__title--sm section__title--flush">Start a conversation</h2>
+        <%= form_with url: conversations_path, method: :post, scope: :conversation, local: true do |form| %>
+          <div class="field">
+            <%= form.label :user_id, "Teammate" %>
+            <%= form.select :user_id, options_for_select(@users.map { |u| [u.email, u.id] }), {}, class: "select" %>
+          </div>
+          <div class="actions">
+            <%= form.submit "Create", class: "btn btn--primary" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <aside class="card">
+      <h2 class="section__title section__title--sm section__title--flush">Your conversations</h2>
+      <% if @conversations.any? %>
+        <ul class="list-reset stack mt-md">
+          <% @conversations.each do |conversation| %>
+            <% other_users = conversation.users.where.not(id: current_user.id) %>
+            <li class="conversation-item">
+              <%= link_to conversation_path(conversation), class: "conversation-link" do %>
+                <strong><%= other_users.map(&:email).to_sentence %></strong>
+                <span class="meta"><%= conversation.messages.last&.body&.truncate(80) || "No messages yet" %></span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="meta mt-md">No conversations yet. Start one above!</p>
+      <% end %>
+    </aside>
+  </div>
+</section>

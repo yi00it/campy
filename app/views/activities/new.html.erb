@@ -1,11 +1,11 @@
 <section class="section">
   <header class="section__head">
     <h1 class="section__title">Plan a new activity</h1>
-    <p class="section__lead">Keep it short, sharp, and reassuring—just like Basecamp. Assign a category and Campy handles the rhythm.</p>
+    <p class="section__lead">Keep it short, sharp, and reassuring—just like Basecamp. Set the zone and discipline so the team knows where the work sits.</p>
   </header>
 
   <div class="card">
-    <%= render "form", activity: @activity, project: @project, categories: @categories %>
+    <%= render "form", activity: @activity, project: @project, disciplines: @disciplines, zones: @zones %>
   </div>
 
   <div class="hero__cta mt-md">

@@ -14,15 +14,16 @@
         <thead>
           <tr>
             <th scope="col">Activity</th>
+            <th scope="col">Zone</th>
+            <th scope="col">Discipline</th>
             <th scope="col">Start</th>
             <th scope="col">Due</th>
-            <th scope="col">Category</th>
             <th scope="col">Assignee</th>
             <th scope="col" class="activity-table__actions-head">Actions</th>
           </tr>
         </thead>
         <tbody id="open-activities-body">
-          <%= render partial: "activities/activity", collection: active_activities, as: :activity %>
+          <%= render partial: "activities/activity", collection: active_activities, as: :activity, locals: { filter_params: {}, completed: false } %>
         </tbody>
       </table>
     </div>
@@ -41,15 +42,16 @@
           <thead>
             <tr>
               <th scope="col">Activity</th>
+              <th scope="col">Zone</th>
+              <th scope="col">Discipline</th>
               <th scope="col">Start</th>
               <th scope="col">Finished</th>
-              <th scope="col">Category</th>
               <th scope="col">Assignee</th>
               <th scope="col" class="activity-table__actions-head">Actions</th>
             </tr>
           </thead>
           <tbody id="completed-activities-body">
-            <%= render partial: "activities/activity", collection: completed_activities, as: :activity %>
+            <%= render partial: "activities/activity", collection: completed_activities, as: :activity, locals: { filter_params: {}, completed: true } %>
           </tbody>
         </table>
       </div>

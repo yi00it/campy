@@ -1,4 +1,5 @@
-<% categories ||= [] %>
+<% disciplines ||= [] %>
+<% zones ||= [] %>
 <%= form_with(model: (activity.persisted? ? activity : [project, activity]), local: true) do |form| %>
   <% if activity.errors.any? %>
     <div class="flash">
@@ -38,17 +39,32 @@
   </div>
 
   <div class="field">
-    <%= form.label :category_id, "Category" %>
-    <% if categories.empty? %>
+    <%= form.label :zone_id, "Zone" %>
+    <% if zones.empty? %>
       <p class="meta meta--note">
-        No categories yet. <%= link_to "Create one", categories_path %>
+        No zones yet. <%= link_to "Create one", zones_path %>
       </p>
     <% end %>
-    <%= form.collection_select :category_id,
-          categories,
+    <%= form.collection_select :zone_id,
+          zones,
           :id,
           :name,
-          { include_blank: "Uncategorized" },
+          { include_blank: "Unassigned" },
+          { class: "select" } %>
+  </div>
+
+  <div class="field">
+    <%= form.label :discipline_id, "Discipline" %>
+    <% if disciplines.empty? %>
+      <p class="meta meta--note">
+        No disciplines yet. <%= link_to "Create one", disciplines_path %>
+      </p>
+    <% end %>
+    <%= form.collection_select :discipline_id,
+          disciplines,
+          :id,
+          :name,
+          { include_blank: "Unassigned" },
           { class: "select" } %>
   </div>
 

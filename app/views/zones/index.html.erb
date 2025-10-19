@@ -1,0 +1,40 @@
+<section class="section">
+  <header class="section__head">
+    <div class="list-inline">
+      <span class="pill">Configuration</span>
+      <span class="pill pill--sunrise"><%= pluralize(@zones.count, "zone") %></span>
+    </div>
+    <h1 class="section__title">Manage zones</h1>
+    <p class="section__lead">Zones represent building areas such as “Lobby”, “Guest rooms”, or “Service core”.</p>
+  </header>
+
+  <div class="split">
+    <div class="stack">
+      <div class="card">
+        <h2 class="section__title section__title--sm section__title--flush">Existing zones</h2>
+        <% if @zones.any? %>
+          <ul class="stack list-reset mt-md">
+            <% @zones.each do |zone| %>
+              <li class="card card--flat">
+                <div class="list-inline list-inline--spread">
+                  <strong><%= zone.name %></strong>
+                  <span class="list-inline">
+                    <%= link_to "Edit", edit_zone_path(zone), class: "btn btn--ghost" %>
+                    <%= link_to "Delete", zone, data: { turbo_method: :delete, turbo_confirm: "Delete zone '#{zone.name}'?" }, class: "btn btn--text" %>
+                  </span>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <div class="empty-state">No zones yet. Add the key building areas to map out the project.</div>
+        <% end %>
+      </div>
+    </div>
+
+    <aside class="card">
+      <h2 class="section__title section__title--sm section__title--flush">Add a zone</h2>
+      <%= render "form", zone: @zone %>
+    </aside>
+  </div>
+</section>

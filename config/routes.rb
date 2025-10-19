@@ -7,6 +7,9 @@ Rails.application.routes.draw do
   root to: "home#index"
 
   resources :projects do
+    member do
+      get :gantt
+    end
     resources :project_memberships, only: [:create, :destroy]
     resources :activities, shallow: true do
       member do
@@ -18,7 +21,11 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :categories
+  resources :disciplines
+  resources :zones
+  resources :conversations, only: [:index, :show, :create] do
+    resources :messages, only: [:create]
+  end
 
   get "my-activities", to: "assigned_activities#index", as: :my_activities
 end

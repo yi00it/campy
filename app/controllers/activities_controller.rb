@@ -3,7 +3,7 @@ class ActivitiesController < ApplicationController
 
   before_action :set_project, only: [:new, :create]
   before_action :set_activity, only: [:show, :edit, :update, :destroy, :toggle_done]
-  before_action :set_categories, only: [:new, :create, :edit, :update]
+  before_action :set_activity_options, only: [:new, :create, :edit, :update]
   before_action :set_assignable_users, only: [:new, :create, :edit, :update]
 
   def show
@@ -75,12 +75,11 @@ class ActivitiesController < ApplicationController
 
     @activity.toggle!(:is_done)
     @project = @activity.project
-    @project.reload
-    scoped = @project.activities.order(start_on: :asc, due_on: :asc, created_at: :desc)
+    scoped = @project.activities.includes(:assignee, :discipline, :zone).order(start_on: :asc, due_on: :asc, created_at: :desc)
     @active_activities = scoped.where(is_done: false)
     @completed_activities = scoped.where(is_done: true)
-    @active_count = @active_activities.size
-    @completed_count = @completed_activities.size
+    @active_count = @active_activities.count
+    @completed_count = @completed_activities.count
 
     respond_to do |format|
       format.turbo_stream
@@ -103,11 +102,12 @@ class ActivitiesController < ApplicationController
   end
 
   def activity_params
-    params.require(:activity).permit(:title, :description, :start_on, :due_on, :is_done, :category_id, :assignee_id, files: [])
+    params.require(:activity).permit(:title, :description, :start_on, :due_on, :is_done, :discipline_id, :zone_id, :assignee_id, files: [])
   end
 
-  def set_categories
-    @categories = Category.order(:name)
+  def set_activity_options
+    @disciplines = Discipline.order(:name)
+    @zones = Zone.order(:name)
   end
 
   def set_assignable_users

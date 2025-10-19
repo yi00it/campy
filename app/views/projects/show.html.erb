@@ -10,6 +10,7 @@
       <% if @project.owner == current_user %>
         <%= link_to "Edit project", edit_project_path(@project), class: "btn btn--ghost" %>
       <% end %>
+      <%= link_to "Gantt report", gantt_project_path(@project), class: "btn btn--ghost" %>
       <%= link_to "Back to projects", projects_path, class: "btn btn--text" %>
     </div>
   </header>

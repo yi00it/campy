@@ -1,0 +1,10 @@
+<%= form_with(model: zone, local: true) do |form| %>
+  <div class="field">
+    <%= form.label :name, "Name" %>
+    <%= form.text_field :name, autofocus: true %>
+  </div>
+  <div class="actions">
+    <%= form.submit (zone.persisted? ? "Update" : "Create"), class: "btn btn--primary" %>
+    <%= link_to "Cancel", zones_path, class: "btn btn--text" if zone.persisted? %>
+  </div>
+<% end %>

@@ -1,6 +1,8 @@
+require Rails.root.join("app/services/reports/gantt_pdf")
+
 class ProjectsController < ApplicationController
-  before_action :set_project, only: [:show, :edit, :update, :destroy]
-  before_action :authorize_project_member!, only: [:show]
+  before_action :set_project, only: [:show, :gantt, :edit, :update, :destroy]
+  before_action :authorize_project_member!, only: [:show, :gantt]
   before_action :authorize_project_owner!, only: [:edit, :update, :destroy]
 
   def index
@@ -11,11 +13,11 @@ class ProjectsController < ApplicationController
   end
 
   def show
-    scoped = @project.activities.order(start_on: :asc, due_on: :asc, created_at: :desc)
+    scoped = @project.activities.includes(:assignee, :discipline, :zone).order(start_on: :asc, due_on: :asc, created_at: :desc)
     @active_activities = scoped.where(is_done: false)
     @completed_activities = scoped.where(is_done: true)
-    @active_count = @active_activities.size
-    @completed_count = @completed_activities.size
+    @active_count = @active_activities.count
+    @completed_count = @completed_activities.count
     @project_memberships = @project.project_memberships.includes(:user)
     @membership = @project.project_memberships.new
   end
@@ -47,6 +49,30 @@ class ProjectsController < ApplicationController
     @project.destroy
     redirect_to projects_path, notice: "Project deleted."
   end
+
+  def gantt
+    @activities = @project.activities.includes(:assignee, :discipline, :zone).order(start_on: :asc, due_on: :asc, created_at: :asc)
+    if @activities.any?
+      @timeline_start = @activities.map(&:start_on).compact.min || Date.current
+      @timeline_end = @activities.map(&:due_on).compact.max || @timeline_start
+      @timeline_end = @timeline_start if @timeline_end < @timeline_start
+    else
+      @timeline_start = Date.current
+      @timeline_end = @timeline_start
+    end
+
+    respond_to do |format|
+      format.html
+      format.pdf do
+        pdf = Reports::GanttPdf.new(@project, @activities, @timeline_start, @timeline_end).render
+        send_data pdf,
+                  filename: "#{@project.name.parameterize}-gantt.pdf",
+                  type: "application/pdf",
+                  disposition: "inline"
+      end
+    end
+  end
+
 
   private
 

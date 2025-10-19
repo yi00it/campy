@@ -1,0 +1,10 @@
+<%= form_with(model: discipline, local: true) do |form| %>
+  <div class="field">
+    <%= form.label :name, "Name" %>
+    <%= form.text_field :name, autofocus: true %>
+  </div>
+  <div class="actions">
+    <%= form.submit (discipline.persisted? ? "Update" : "Create"), class: "btn btn--primary" %>
+    <%= link_to "Cancel", disciplines_path, class: "btn btn--text" if discipline.persisted? %>
+  </div>
+<% end %>

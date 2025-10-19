@@ -14,14 +14,16 @@
         <thead>
           <tr>
             <th scope="col">Activity</th>
-            <th scope="col">Schedule</th>
-            <th scope="col">Category & files</th>
+            <th scope="col">Zone</th>
+            <th scope="col">Discipline</th>
+            <th scope="col">Start</th>
+            <th scope="col">Due</th>
             <th scope="col">Project</th>
             <th scope="col" class="activity-table__actions-head">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <%= render partial: "activities/activity", collection: @activities, as: :activity, locals: { show_project: true } %>
+          <%= render partial: "activities/activity", collection: @activities, as: :activity, locals: { show_project: true, filter_params: {}, completed: false } %>
         </tbody>
       </table>
     </div>

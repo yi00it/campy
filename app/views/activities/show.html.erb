@@ -13,9 +13,12 @@
           <% else %>
             <span class="pill">No due date</span>
           <% end %>
-          <span class="pill pill--sunrise">
-            <%= @activity.category&.name || "Uncategorized" %>
-          </span>
+          <% if @activity.zone.present? %>
+            <span class="pill pill--sunrise"><%= @activity.zone.name %></span>
+          <% end %>
+          <% if @activity.discipline.present? %>
+            <span class="pill pill--frost"><%= @activity.discipline.name %></span>
+          <% end %>
         </div>
 
         <h2 class="section__title section__title--sm mt-sm"><%= @activity.title %></h2>
@@ -57,6 +60,8 @@
       <div class="list-inline list-inline--spread meta-bar">
         <span class="meta"><strong>Starts:</strong> <%= @activity.start_on&.to_fs(:long) || "Not set" %></span>
         <span class="meta"><strong>Due:</strong> <%= @activity.due_on&.to_fs(:long) || "Not set" %></span>
+        <span class="meta"><strong>Zone:</strong> <%= @activity.zone&.name || "Not set" %></span>
+        <span class="meta"><strong>Discipline:</strong> <%= @activity.discipline&.name || "Not set" %></span>
         <span class="meta"><strong>Assigned to:</strong> <%= @activity.assignee&.email || "Unassigned" %></span>
       </div>
     </div>

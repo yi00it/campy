@@ -1,0 +1,40 @@
+<section class="section">
+  <header class="section__head">
+    <div class="list-inline">
+      <span class="pill">Configuration</span>
+      <span class="pill pill--sunrise"><%= pluralize(@disciplines.count, "discipline") %></span>
+    </div>
+    <h1 class="section__title">Manage disciplines</h1>
+    <p class="section__lead">Disciplines classify work like MEP, Fitout, or Structure. Activities can be grouped by these labels.</p>
+  </header>
+
+  <div class="split">
+    <div class="stack">
+      <div class="card">
+        <h2 class="section__title section__title--sm section__title--flush">Existing disciplines</h2>
+        <% if @disciplines.any? %>
+          <ul class="stack list-reset mt-md">
+            <% @disciplines.each do |discipline| %>
+              <li class="card card--flat">
+                <div class="list-inline list-inline--spread">
+                  <strong><%= discipline.name %></strong>
+                  <span class="list-inline">
+                    <%= link_to "Edit", edit_discipline_path(discipline), class: "btn btn--ghost" %>
+                    <%= link_to "Delete", discipline, data: { turbo_method: :delete, turbo_confirm: "Delete discipline '#{discipline.name}'?" }, class: "btn btn--text" %>
+                  </span>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <div class="empty-state">No disciplines yet. Add some like “Structure”, “MEP”, or “Fitout”.</div>
+        <% end %>
+      </div>
+    </div>
+
+    <aside class="card">
+      <h2 class="section__title section__title--sm section__title--flush">Add a discipline</h2>
+      <%= render "form", discipline: @discipline %>
+    </aside>
+  </div>
+</section>
