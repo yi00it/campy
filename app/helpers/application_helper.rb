@@ -12,6 +12,12 @@ module ApplicationHelper
     end
   end
 
+  def nav_link_class(path)
+    base_class = "nav-link"
+    active_class = current_page?(path) ? " active" : ""
+    base_class + active_class
+  end
+
   # Notification helpers
   def notification_date_group(notification)
     return "Today" if notification.created_at.to_date == Date.current
