@@ -48,7 +48,7 @@
         <% end %>
       </p>
     </div>
-    <% if can_manage_activity?(activity) %>
+    <% if can_manage_project?(activity.project) %>
       <%= button_to toggle_done_activity_path(activity),
             method: :patch,
             class: "activity-card__checkbox",
@@ -134,7 +134,7 @@
 
   <div class="activity-card__actions">
     <%= link_to "View Details", activity_path(activity), class: "btn btn--ghost btn--sm" %>
-    <% if can_manage_activity?(activity) %>
+    <% if can_manage_project?(activity.project) %>
       <%= link_to "Edit", edit_activity_path(activity), class: "btn btn--ghost btn--sm" %>
     <% end %>
   </div>
