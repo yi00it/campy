@@ -4,8 +4,87 @@
       <span class="pill">Overview</span>
       <h1 class="section__title">Welcome back, <%= current_user.display_name %></h1>
     </div>
-    <p class="section__lead">Here’s a quick look at your projects, upcoming work, and calendar.</p>
+    <p class="section__lead">Here's a quick look at your projects, upcoming work, and calendar.</p>
   </header>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <h3 class="quick-actions__title">Quick Actions</h3>
+    <div class="quick-actions__grid">
+      <%= link_to new_project_path, class: "quick-action-card quick-action-card--blue" do %>
+        <div class="quick-action-card__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="quick-action-card__label">New Project</span>
+      <% end %>
+
+      <%= link_to my_activities_path, class: "quick-action-card quick-action-card--purple" do %>
+        <div class="quick-action-card__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="quick-action-card__label">My Activities</span>
+      <% end %>
+
+      <%= link_to calendar_path, class: "quick-action-card quick-action-card--pink" do %>
+        <div class="quick-action-card__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="quick-action-card__label">View Calendar</span>
+      <% end %>
+
+      <%= link_to conversations_path, class: "quick-action-card quick-action-card--green" do %>
+        <div class="quick-action-card__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="quick-action-card__label">Messages</span>
+      <% end %>
+
+      <%= link_to new_calendar_event_path, class: "quick-action-card quick-action-card--orange" do %>
+        <div class="quick-action-card__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="quick-action-card__label">Schedule Event</span>
+      <% end %>
+
+      <%= link_to disciplines_path, class: "quick-action-card quick-action-card--yellow" do %>
+        <div class="quick-action-card__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="quick-action-card__label">Manage Disciplines</span>
+      <% end %>
+
+      <%= link_to zones_path, class: "quick-action-card quick-action-card--indigo" do %>
+        <div class="quick-action-card__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="quick-action-card__label">Manage Zones</span>
+      <% end %>
+
+      <%= link_to settings_path, class: "quick-action-card quick-action-card--gray" do %>
+        <div class="quick-action-card__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="quick-action-card__label">Settings</span>
+      <% end %>
+    </div>
+  </div>
 
   <div class="dashboard__grid">
     <div class="card dashboard__card dashboard__card--stats">
