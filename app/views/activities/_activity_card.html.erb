@@ -21,13 +21,15 @@
     status_class = "status-badge--blue"
   end
 
-  # Priority badge
-  priority_colors = {
-    "high" => "status-badge--red",
-    "medium" => "status-badge--orange",
-    "low" => "status-badge--gray"
-  }
-  priority_class = priority_colors[activity.priority] || "status-badge--gray"
+  # Priority badge (only if activity has priority field)
+  if activity.respond_to?(:priority) && activity.priority.present?
+    priority_colors = {
+      "high" => "status-badge--red",
+      "medium" => "status-badge--orange",
+      "low" => "status-badge--gray"
+    }
+    priority_class = priority_colors[activity.priority] || "status-badge--gray"
+  end
 %>
 
 <article class="activity-card <%= 'activity-card--completed' if completed %>">
@@ -69,7 +71,7 @@
 
   <div class="activity-card__badges">
     <span class="status-badge <%= status_class %>"><%= status_text %></span>
-    <% if activity.priority.present? %>
+    <% if activity.respond_to?(:priority) && activity.priority.present? %>
       <span class="status-badge <%= priority_class %>"><%= activity.priority.titleize %></span>
     <% end %>
   </div>
