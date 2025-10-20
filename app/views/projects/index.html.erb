@@ -1,32 +1,93 @@
 <section class="section">
   <header class="section__head">
-    <div class="list-inline">
-      <span class="pill">Projects HQ</span>
-      <span class="pill pill--sunrise"><%= pluralize(@projects.count, "active project") %></span>
+    <div class="section__headline">
+      <h1 class="section__title">Projects</h1>
+      <%= link_to new_project_path, class: "btn btn--primary btn--large" do %>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M10 4v12m-6-6h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        New Project
+      <% end %>
     </div>
-    <h1 class="section__title">Welcome back! Pick up right where you left off.</h1>
     <p class="section__lead">
-      Every project keeps its activities, notes, and progress tucked into a single friendly space. Spin up a new one in seconds.
+      <%= pluralize(@projects.count, "active project") %> · Manage your work in organized spaces
     </p>
-    <div class="hero__cta">
-      <%= link_to "Create a project", new_project_path, class: "btn btn--primary" %>
-      <%= link_to "Manage zones", zones_path, class: "btn btn--ghost" %>
-      <%= link_to "Manage disciplines", disciplines_path, class: "btn btn--ghost" %>
-    </div>
   </header>
 
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <button class="filter-bar__button">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Filter
+    </button>
+    <button class="filter-bar__button">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M4 6l4-4 4 4M4 10l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Sort
+    </button>
+    <div class="filter-bar__spacer"></div>
+    <span class="meta"><%= @projects.count %> projects</span>
+  </div>
+
   <% if @projects.any? %>
-    <div class="grid cards">
+    <div class="projects-grid">
       <% @projects.each do |project| %>
-        <article class="card">
-          <h3><%= link_to project.name, project %></h3>
-          <p class="meta"><%= truncate(project.description.to_s.presence || "A calm corner to plan work the Basecamp way.", length: 140) %></p>
-          <p class="meta meta--note">Role: <%= project.owner_id == current_user.id ? "Owner" : "Collaborator" %></p>
-          <hr class="hr">
-          <div class="list-inline">
-            <%= link_to "Open", project, class: "btn btn--primary" %>
+        <article class="project-card">
+          <div class="project-card__header">
+            <div>
+              <h3 class="project-card__title">
+                <%= link_to project.name, project %>
+              </h3>
+              <p class="project-card__description">
+                <%= truncate(project.description.to_s.presence || "No description", length: 120) %>
+              </p>
+            </div>
             <% if project.owner_id == current_user.id %>
-              <%= link_to "Edit", edit_project_path(project), class: "btn btn--ghost" %>
+              <span class="status-badge status-badge--purple">Owner</span>
+            <% else %>
+              <span class="status-badge status-badge--blue">Member</span>
+            <% end %>
+          </div>
+
+          <div class="project-card__meta">
+            <div class="project-card__meta-item">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 14A6 6 0 108 2a6 6 0 000 12z" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M8 4v4l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              Updated <%= time_ago_in_words(project.updated_at) %> ago
+            </div>
+            <div class="project-card__meta-item">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M13 14v-1.333A2.667 2.667 0 0010.333 10H5.667A2.667 2.667 0 003 12.667V14M8 7.333A2.667 2.667 0 108 2a2.667 2.667 0 000 5.333z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <%= project.project_memberships.count + 1 %> members
+            </div>
+          </div>
+
+          <%
+            total_activities = project.activities.count
+            done_activities = project.activities.where(is_done: true).count
+            progress_pct = total_activities > 0 ? (done_activities.to_f / total_activities * 100).round : 0
+          %>
+
+          <div class="project-card__progress">
+            <div class="project-card__progress-label">
+              <span><%= done_activities %> / <%= total_activities %> activities completed</span>
+              <span class="project-card__progress-percent"><%= progress_pct %>%</span>
+            </div>
+            <div class="project-card__progress-bar">
+              <div class="project-card__progress-fill" style="width: <%= progress_pct %>%"></div>
+            </div>
+          </div>
+
+          <div class="project-card__actions">
+            <%= link_to "Open Project", project, class: "btn btn--primary btn--sm" %>
+            <% if project.owner_id == current_user.id %>
+              <%= link_to "Edit", edit_project_path(project), class: "btn btn--ghost btn--sm" %>
             <% end %>
           </div>
         </article>
@@ -34,8 +95,11 @@
     </div>
   <% else %>
     <div class="empty-state">
-      <p>No projects yet. Base a new one off your next big idea and we’ll organize the rest.</p>
-      <%= link_to "Launch your first project", new_project_path, class: "btn btn--primary" %>
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <path d="M12 28v16a4 4 0 004 4h32a4 4 0 004-4V24a4 4 0 00-4-4H28l-4-4H16a4 4 0 00-4 4z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <p>No projects yet. Create your first project to get started.</p>
+      <%= link_to "Create Your First Project", new_project_path, class: "btn btn--primary" %>
     </div>
   <% end %>
 </section>

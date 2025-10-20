@@ -1,0 +1,139 @@
+<%
+  completed ||= false
+  days_until_due = activity.due_on ? (activity.due_on - Date.current).to_i : nil
+  is_overdue = activity.due_on && activity.due_on < Date.current && !activity.is_done?
+
+  # Status badge
+  if activity.is_done?
+    status_text = "Completed"
+    status_class = "status-badge--green"
+  elsif is_overdue
+    status_text = "Overdue"
+    status_class = "status-badge--red"
+  elsif days_until_due && days_until_due <= 3
+    status_text = "#{days_until_due} days left"
+    status_class = "status-badge--orange"
+  elsif days_until_due && days_until_due <= 7
+    status_text = "#{days_until_due} days left"
+    status_class = "status-badge--yellow"
+  else
+    status_text = "In Progress"
+    status_class = "status-badge--blue"
+  end
+
+  # Priority badge
+  priority_colors = {
+    "high" => "status-badge--red",
+    "medium" => "status-badge--orange",
+    "low" => "status-badge--gray"
+  }
+  priority_class = priority_colors[activity.priority] || "status-badge--gray"
+%>
+
+<article class="activity-card <%= 'activity-card--completed' if completed %>">
+  <div class="activity-card__header">
+    <div>
+      <h3 class="activity-card__title">
+        <%= link_to activity.title, activity_path(activity) %>
+      </h3>
+      <p class="activity-card__subtitle">
+        <%= activity.project.name %>
+        <% if activity.discipline.present? %>
+          · <%= activity.discipline.name %>
+        <% end %>
+        <% if activity.zone.present? %>
+          · <%= activity.zone.name %>
+        <% end %>
+      </p>
+    </div>
+    <% if can_manage_activity?(activity) %>
+      <%= button_to toggle_done_activity_path(activity),
+            method: :patch,
+            class: "activity-card__checkbox",
+            data: { turbo_frame: "_top" },
+            title: activity.is_done? ? "Mark as incomplete" : "Mark as complete" do %>
+        <% if activity.is_done? %>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" opacity="0.2"/>
+            <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="4" y="4" width="16" height="16" rx="4" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        <% else %>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect x="4" y="4" width="16" height="16" rx="4" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="activity-card__badges">
+    <span class="status-badge <%= status_class %>"><%= status_text %></span>
+    <% if activity.priority.present? %>
+      <span class="status-badge <%= priority_class %>"><%= activity.priority.titleize %></span>
+    <% end %>
+  </div>
+
+  <div class="activity-card__meta">
+    <% if activity.assignee.present? %>
+      <div class="activity-card__meta-item">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M13 14v-1.333A2.667 2.667 0 0010.333 10H5.667A2.667 2.667 0 003 12.667V14M8 7.333A2.667 2.667 0 108 2a2.667 2.667 0 000 5.333z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <%= activity.assignee.display_name %>
+      </div>
+    <% end %>
+
+    <% if activity.start_on.present? %>
+      <div class="activity-card__meta-item">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3.5 2.5v2m9-2v2m-10 1h11m-11 0v7a1 1 0 001 1h9a1 1 0 001-1v-7m-11 0a1 1 0 011-1h9a1 1 0 011 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Start: <%= activity.start_on.strftime("%b %d") %>
+      </div>
+    <% end %>
+
+    <% if activity.due_on.present? %>
+      <div class="activity-card__meta-item">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 4v4l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+        Due: <%= activity.due_on.strftime("%b %d") %>
+      </div>
+    <% end %>
+
+    <% if activity.comments.exists? %>
+      <div class="activity-card__meta-item">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M4.667 9.333H4a1.333 1.333 0 01-1.333-1.333V4A1.333 1.333 0 014 2.667h8A1.333 1.333 0 0113.333 4v4A1.333 1.333 0 0112 9.333h-2.667l-2.666 2.667V9.333z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <%= activity.comments.count %> <%= 'comment'.pluralize(activity.comments.count) %>
+      </div>
+    <% end %>
+  </div>
+
+  <% unless completed %>
+    <%
+      total_days = activity.duration_days || 0
+      elapsed_days = activity.start_on ? [(Date.current - activity.start_on).to_i, 0].max : 0
+      progress_pct = total_days > 0 ? [(elapsed_days.to_f / total_days * 100).round, 100].min : 0
+    %>
+    <div class="activity-card__progress">
+      <div class="activity-card__progress-label">
+        <span>Progress</span>
+        <span><%= progress_pct %>%</span>
+      </div>
+      <div class="activity-card__progress-bar">
+        <div class="activity-card__progress-fill" style="width: <%= progress_pct %>%"></div>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="activity-card__actions">
+    <%= link_to "View Details", activity_path(activity), class: "btn btn--ghost btn--sm" %>
+    <% if can_manage_activity?(activity) %>
+      <%= link_to "Edit", edit_activity_path(activity), class: "btn btn--ghost btn--sm" %>
+    <% end %>
+  </div>
+</article>

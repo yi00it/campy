@@ -1,63 +1,68 @@
 <div id="project-activities">
   <div class="section__head section__head--tight">
-    <div class="list-inline">
-      <h2 class="section__title section__title--sm">Open activities</h2>
+    <div class="section__headline">
+      <h2 class="section__title section__title--sm">Activities</h2>
       <% if can_manage_project?(project) %>
-        <span class="push-right">
-          <%= link_to "New activity", new_project_activity_path(project), class: "btn btn--primary" %>
-        </span>
+        <%= link_to new_project_activity_path(project), class: "btn btn--primary" do %>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 3v10m-5-5h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          New Activity
+        <% end %>
       <% end %>
     </div>
   </div>
 
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <button class="filter-bar__button">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Filter
+    </button>
+    <button class="filter-bar__button">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M4 6l4-4 4 4M4 10l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Sort
+    </button>
+    <button class="filter-bar__button">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M3.5 8h9M8 3.5v9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Hide
+    </button>
+    <div class="filter-bar__spacer"></div>
+    <span class="meta"><%= active_activities.count %> open</span>
+  </div>
+
   <% if active_activities.any? %>
-    <div class="activity-table-wrapper mt-sm">
-      <table class="activity-table" role="grid">
-        <thead>
-          <tr>
-            <th scope="col">Activity</th>
-            <th scope="col">Zone</th>
-            <th scope="col">Discipline</th>
-            <th scope="col">Start</th>
-            <th scope="col">Due</th>
-            <th scope="col">Assignee</th>
-            <th scope="col" class="activity-table__actions-head">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="open-activities-body">
-          <%= render partial: "activities/activity", collection: active_activities, as: :activity, locals: { filter_params: {}, completed: false } %>
-        </tbody>
-      </table>
+    <div class="activity-list">
+      <% active_activities.each do |activity| %>
+        <%= render "activities/activity_card", activity: activity, project: project %>
+      <% end %>
     </div>
   <% else %>
     <div class="empty-state">
-      <p>No activities yet. Draft your first one to set the tone—due dates default to tomorrow so you keep momentum.</p>
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <path d="M32 16v32m16-16H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <rect x="8" y="8" width="48" height="48" rx="4" stroke="currentColor" stroke-width="2" fill="none"/>
+      </svg>
+      <p>No activities yet. Create your first activity to get started.</p>
       <% if can_manage_project?(project) %>
-        <%= link_to "Create an activity", new_project_activity_path(project), class: "btn btn--primary" %>
+        <%= link_to "Create Activity", new_project_activity_path(project), class: "btn btn--primary" %>
       <% end %>
     </div>
   <% end %>
 
   <% if completed_activities.any? %>
     <section class="mt-lg">
-      <h2 class="section__title section__title--sm">Completed activities</h2>
-      <div class="activity-table-wrapper mt-sm">
-        <table class="activity-table activity-table--completed" role="grid">
-          <thead>
-            <tr>
-              <th scope="col">Activity</th>
-              <th scope="col">Zone</th>
-              <th scope="col">Discipline</th>
-              <th scope="col">Start</th>
-              <th scope="col">Finished</th>
-              <th scope="col">Assignee</th>
-              <th scope="col" class="activity-table__actions-head">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="completed-activities-body">
-            <%= render partial: "activities/activity", collection: completed_activities, as: :activity, locals: { filter_params: {}, completed: true } %>
-          </tbody>
-        </table>
+      <h2 class="section__title section__title--sm">Completed (<%= completed_activities.count %>)</h2>
+      <div class="activity-list activity-list--completed">
+        <% completed_activities.each do |activity| %>
+          <%= render "activities/activity_card", activity: activity, project: project, completed: true %>
+        <% end %>
       </div>
     </section>
   <% end %>
