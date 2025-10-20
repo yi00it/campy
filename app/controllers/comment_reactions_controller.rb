@@ -28,7 +28,7 @@ class CommentReactionsController < ApplicationController
   end
 
   def authorize_comment!
-    return if @project.accessible_by?(current_user)
+    return if can_comment_on_activity?(@activity) || can_manage_project?(@project)
 
     redirect_to projects_path, alert: "Not allowed."
   end

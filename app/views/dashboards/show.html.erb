@@ -1,0 +1,146 @@
+<section class="section section--dashboard">
+  <header class="section__head">
+    <div class="section__headline">
+      <span class="pill">Overview</span>
+      <h1 class="section__title">Welcome back, <%= current_user.display_name %></h1>
+    </div>
+    <p class="section__lead">Here’s a quick look at your projects, upcoming work, and calendar.</p>
+  </header>
+
+  <div class="dashboard__grid">
+    <div class="card dashboard__card dashboard__card--stats">
+      <h2 class="dashboard__card-title">Activity summary</h2>
+      <div class="dashboard__stat-band">
+        <div>
+          <span class="dashboard__stat-label">Total assigned</span>
+          <strong class="dashboard__stat-value"><%= @activity_stats[:total] %></strong>
+        </div>
+        <div>
+          <span class="dashboard__stat-label">Completed</span>
+          <strong class="dashboard__stat-value"><%= @activity_stats[:done] %></strong>
+        </div>
+        <div>
+          <span class="dashboard__stat-label">Overdue</span>
+          <strong class="dashboard__stat-value text-warn"><%= @activity_stats[:overdue] %></strong>
+        </div>
+        <div>
+          <span class="dashboard__stat-label">Due soon</span>
+          <strong class="dashboard__stat-value"><%= @activity_stats[:upcoming] %></strong>
+        </div>
+      </div>
+      <div class="dashboard__progress">
+        <span class="dashboard__progress-label">Completion</span>
+        <div class="dashboard__progress-bar">
+          <span class="dashboard__progress-fill" style="width: <%= @activity_stats[:done_pct] %>%"></span>
+        </div>
+        <span class="dashboard__progress-meta"><%= @activity_stats[:done_pct] %>% done</span>
+      </div>
+      <div class="dashboard__progress dashboard__progress--warn">
+        <span class="dashboard__progress-label">Overdue</span>
+        <div class="dashboard__progress-bar">
+          <span class="dashboard__progress-fill" style="width: <%= @activity_stats[:overdue_pct] %>%"></span>
+        </div>
+        <span class="dashboard__progress-meta"><%= @activity_stats[:overdue_pct] %>% overdue</span>
+      </div>
+    </div>
+
+    <div class="card dashboard__card">
+      <h2 class="dashboard__card-title">Projects at a glance</h2>
+      <div class="dashboard__stat-list">
+        <div class="dashboard__stat-item">
+          <span>Total accessible</span>
+          <strong><%= @project_stats[:total] %></strong>
+        </div>
+        <div class="dashboard__stat-item">
+          <span>You own</span>
+          <strong><%= @project_stats[:owned] %></strong>
+        </div>
+        <div class="dashboard__stat-item">
+          <span>Active projects</span>
+          <strong><%= @project_stats[:active] %></strong>
+        </div>
+      </div>
+      <hr class="hr">
+      <h3 class="dashboard__subhead">Latest updates</h3>
+      <% if @projects.any? %>
+        <ul class="list-reset stack">
+          <% @projects.each do |project| %>
+            <li>
+              <div>
+                <strong><%= link_to project.name, project_path(project) %></strong>
+                <span class="meta">Owner: <%= project.owner.display_name %></span>
+              </div>
+              <span class="meta"><%= time_ago_in_words(project.updated_at) %> ago</span>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="meta">No projects yet. <%= link_to "Create your first one", new_project_path %>.</p>
+      <% end %>
+    </div>
+
+    <div class="card dashboard__card">
+      <h2 class="dashboard__card-title">On your plate</h2>
+      <% if @assigned_activities.any? %>
+        <table class="dashboard__table">
+          <thead>
+            <tr>
+              <th>Activity</th>
+              <th>Project</th>
+              <th>Due</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @assigned_activities.each do |activity| %>
+              <tr>
+                <td>
+                  <strong><%= link_to activity.title, activity_path(activity) %></strong>
+                  <span class="meta"><%= activity.discipline&.name || "No discipline" %></span>
+                </td>
+                <td><span class="meta"><%= activity.project.name %></span></td>
+                <td>
+                  <% if activity.due_on.present? %>
+                    <span class="pill <%= 'pill--warn' if activity.due_on < Date.current && !activity.is_done? %>">
+                      <%= activity.due_on.to_fs(:short) %>
+                    </span>
+                  <% else %>
+                    <span class="meta">No due date</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+        <div class="dashboard__actions">
+          <%= link_to "View all assigned activities", my_activities_path, class: "btn btn--ghost" %>
+        </div>
+      <% else %>
+        <p class="meta">Nothing assigned right now.</p>
+      <% end %>
+    </div>
+
+    <div class="card dashboard__card">
+      <h2 class="dashboard__card-title">Upcoming events</h2>
+      <% if @upcoming_events.any? %>
+        <ul class="list-reset stack">
+          <% @upcoming_events.each do |event| %>
+            <li>
+              <div>
+                <strong><%= link_to event.title, edit_calendar_event_path(event) %></strong>
+                <span class="meta"><%= event.event_type.humanize %><%= event.location.present? ? " · #{event.location}" : "" %></span>
+              </div>
+              <span class="meta">
+                <%= event.start_at.strftime("%b %d %H:%M") %>
+              </span>
+            </li>
+          <% end %>
+        </ul>
+        <div class="dashboard__actions">
+          <%= link_to "Open calendar", calendar_path, class: "btn btn--ghost" %>
+        </div>
+      <% else %>
+        <p class="meta">No upcoming calendar events.</p>
+      <% end %>
+    </div>
+  </div>
+</section>

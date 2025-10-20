@@ -1,0 +1,11 @@
+<p>Hi there,</p>
+
+<p><strong><%= @inviter.display_name %></strong> invited you to collaborate on the <strong><%= @project.name %></strong> project in Campy.</p>
+
+<p>You’ll join the project as a <strong><%= @invitation.role.titleize %></strong>. You can change this later with the project owner if needed.</p>
+
+<p>You can join by creating your account here:</p>
+
+<p><%= link_to "Create your Campy account", @signup_url %></p>
+
+<p>See you inside,<br>Campy</p>

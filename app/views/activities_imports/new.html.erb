@@ -1,0 +1,59 @@
+<section class="section">
+  <header class="section__head">
+    <h1 class="section__title">Import Activities from Excel</h1>
+    <p class="section__lead">Upload an Excel or CSV file to bulk import activities into <%= @project.name %></p>
+  </header>
+
+  <% if @errors.present? %>
+    <div class="alert alert--error">
+      <h3>Import Errors:</h3>
+      <ul>
+        <% @errors.each do |error| %>
+          <li><%= error %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="card">
+    <div class="card__body">
+      <h2 class="card__title">Step 1: Download Template</h2>
+      <p class="meta">Download the Excel template with the correct column format:</p>
+      <%= link_to "Download Import Template (CSV)", template_project_activities_import_path(@project), class: "btn btn--secondary" %>
+
+      <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border);">
+
+      <h2 class="card__title">Step 2: Upload Your File</h2>
+      <p class="meta">Supported formats: .xlsx, .xls, .csv</p>
+
+      <%= form_with url: project_activities_import_path(@project), method: :post, multipart: true, local: true, data: { turbo: false }, class: "form" do |f| %>
+        <div class="form__group">
+          <%= f.label :file, "Choose File", class: "form__label" %>
+          <%= f.file_field :file, accept: ".xlsx,.xls,.csv", required: true, class: "form__input" %>
+          <small class="form__hint">Maximum file size: 10MB</small>
+        </div>
+
+        <div class="form__actions">
+          <%= f.submit "Preview Import", name: "preview", class: "btn btn--secondary" %>
+          <%= f.submit "Import Now", class: "btn btn--primary", data: { confirm: "Are you sure you want to import these activities?" } %>
+          <%= link_to "Cancel", @project, class: "btn btn--ghost" %>
+        </div>
+      <% end %>
+
+      <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border);">
+
+      <div class="meta meta--note">
+        <h3 style="margin-bottom: 0.5rem;">Import Instructions:</h3>
+        <ul style="margin: 0; padding-left: 1.5rem;">
+          <li><strong>Required columns:</strong> Activity Name, Start Date, Finish Date</li>
+          <li><strong>Optional columns:</strong> Duration (days), Assignee Email, Discipline, Zone, Description, Status</li>
+          <li>Assignee must be a member of the project (use their email)</li>
+          <li>Disciplines and Zones will be created if they don't exist</li>
+          <li>Dates can be in formats like: YYYY-MM-DD, MM/DD/YYYY, or DD-MM-YYYY</li>
+          <li>Status can be: Complete, Completed, Done, Yes (case-insensitive) for completed activities</li>
+          <li>Empty rows will be skipped</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>

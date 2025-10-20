@@ -1,3 +1,7 @@
+<% can_toggle_state = can_manage_project?(@activity.project) || (project_role(@activity.project) == :subcontractor && @activity.assignee_id == current_user.id) %>
+<% can_comment = can_comment_on_activity?(@activity) %>
+<% can_edit_activity = can_manage_project?(@activity.project) %>
+
 <div class="activity-detail stack">
   <section class="card card--activity">
     <div class="activity-card__header">
@@ -25,33 +29,35 @@
         <p class="meta">Part of <%= link_to @activity.project.name, @activity.project %></p>
       </div>
 
-      <div class="activity-card__share" data-controller="modal">
-        <button type="button" class="btn btn--primary btn--share" data-action="modal#open">Share update</button>
-        <div class="modal" data-modal-target="container" hidden>
-          <div class="modal__backdrop" data-modal-target="backdrop" data-action="click->modal#handleBackdrop" aria-hidden="true"></div>
-          <div class="modal__dialog" data-modal-target="dialog" role="dialog" aria-modal="true">
-            <button type="button" class="modal__close btn btn--text" data-action="modal#close" data-modal-close aria-label="Close update dialog">Close</button>
-            <div class="modal__content">
-              <h3 class="section__title section__title--sm section__title--flush">Share an update</h3>
-              <p class="meta">Keep everyone synced with quick notes and supporting files.</p>
-              <%= form_with(model: [@activity, @update], local: true, html: { multipart: true }) do |form| %>
-                <div class="field">
-                  <%= form.label :body, "What's new?" %>
-                  <%= form.text_area :body, rows: 4 %>
-                </div>
-                <div class="field">
-                  <%= form.label :files, "Attach files" %>
-                  <%= form.file_field :files, multiple: true %>
-                </div>
-                <div class="actions">
-                  <%= form.submit "Post update", class: "btn btn--primary" %>
-                  <button type="button" class="btn btn--ghost" data-action="modal#close" data-modal-close>Cancel</button>
-                </div>
-              <% end %>
+      <% if can_comment %>
+        <div class="activity-card__share" data-controller="modal">
+          <button type="button" class="btn btn--primary btn--share" data-action="modal#open">Share update</button>
+          <div class="modal" data-modal-target="container" hidden>
+            <div class="modal__backdrop" data-modal-target="backdrop" data-action="click->modal#handleBackdrop" aria-hidden="true"></div>
+            <div class="modal__dialog" data-modal-target="dialog" role="dialog" aria-modal="true">
+              <button type="button" class="modal__close btn btn--text" data-action="modal#close" data-modal-close aria-label="Close update dialog">Close</button>
+              <div class="modal__content">
+                <h3 class="section__title section__title--sm section__title--flush">Share an update</h3>
+                <p class="meta">Keep everyone synced with quick notes and supporting files.</p>
+                <%= form_with(model: [@activity, @update], local: true, html: { multipart: true }) do |form| %>
+                  <div class="field">
+                    <%= form.label :body, "What's new?" %>
+                    <%= form.text_area :body, rows: 4 %>
+                  </div>
+                  <div class="field">
+                    <%= form.label :files, "Attach files" %>
+                    <%= form.file_field :files, multiple: true %>
+                  </div>
+                  <div class="actions">
+                    <%= form.submit "Post update", class: "btn btn--primary" %>
+                    <button type="button" class="btn btn--ghost" data-action="modal#close" data-modal-close>Cancel</button>
+                  </div>
+                <% end %>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      <% end %>
     </div>
 
     <hr class="hr">
@@ -62,11 +68,11 @@
         <span class="meta"><strong>Due:</strong> <%= @activity.due_on&.to_fs(:long) || "Not set" %></span>
         <span class="meta"><strong>Zone:</strong> <%= @activity.zone&.name || "Not set" %></span>
         <span class="meta"><strong>Discipline:</strong> <%= @activity.discipline&.name || "Not set" %></span>
-        <span class="meta"><strong>Assigned to:</strong> <%= @activity.assignee&.email || "Unassigned" %></span>
+        <span class="meta"><strong>Assigned to:</strong> <%= @activity.assignee&.display_name || "Unassigned" %></span>
       </div>
     </div>
 
-    <% if @activity.files.attached? %>
+    <% if @activity.files.attached? && can_access_activity_files?(@activity) %>
       <div class="attachments-block mt-md">
         <h3 class="section__title section__title--sm section__title--flush">Files</h3>
         <ul class="attachments-list list-reset mt-sm">
@@ -81,15 +87,24 @@
           <% end %>
         </ul>
       </div>
+    <% elsif @activity.files.attached? %>
+      <div class="attachments-block mt-md">
+        <h3 class="section__title section__title--sm section__title--flush">Files</h3>
+        <p class="meta meta--note">You don’t have permission to download files for this activity.</p>
+      </div>
     <% end %>
 
     <div class="hero__cta mt-md">
-      <%= button_to (@activity.is_done ? "Mark as undone" : "Mark as done"),
-                    toggle_done_activity_path(@activity),
-                    method: :patch,
-                    class: "btn btn--primary",
-                    form: { data: { turbo: true } } %>
-      <%= link_to "Edit", edit_activity_path(@activity), class: "btn btn--ghost" %>
+      <% if can_toggle_state %>
+        <%= button_to (@activity.is_done ? "Mark as undone" : "Mark as done"),
+                      toggle_done_activity_path(@activity),
+                      method: :patch,
+                      class: "btn btn--primary",
+                      form: { data: { turbo: true } } %>
+      <% end %>
+      <% if can_edit_activity %>
+        <%= link_to "Edit", edit_activity_path(@activity), class: "btn btn--ghost" %>
+      <% end %>
       <%= link_to "Back to project", project_path(@activity.project), class: "btn btn--text" %>
     </div>
   </section>
@@ -105,13 +120,13 @@
         <% @updates.each do |update| %>
           <li class="update" id="<%= dom_id(update) %>">
             <header class="update__header">
-              <strong><%= update.author&.email || "Teammate" %></strong>
+              <strong><%= update.author&.display_name || "Teammate" %></strong>
               <span class="meta">· <%= time_ago_in_words(update.created_at) %> ago</span>
             </header>
             <div class="update__body">
               <%= simple_format(update.body) %>
             </div>
-            <% if update.files.attached? %>
+            <% if update.files.attached? && can_access_activity_files?(@activity) %>
               <div class="update__files">
                 <ul class="attachments-list attachments-list--compact list-reset">
                   <% update.files.each do |file| %>
@@ -134,7 +149,7 @@
                 <% update.replies.order(:created_at).each do |reply| %>
                   <div class="update__reply" id="<%= dom_id(reply) %>">
                     <header class="update__reply-header">
-                      <strong><%= reply.author&.email || "Teammate" %></strong>
+                      <strong><%= reply.author&.display_name || "Teammate" %></strong>
                       <span class="meta">· <%= time_ago_in_words(reply.created_at) %> ago</span>
                     </header>
                     <div class="update__reply-body">
@@ -144,29 +159,35 @@
                       <%= turbo_frame_tag dom_id(reply, :reactions) do %>
                         <%= render "comments/reactions", comment: reply, reaction_emojis: @reaction_emojis %>
                       <% end %>
-                      <%= link_to "Delete", reply, data: { turbo_method: :delete, turbo_confirm: "Delete this reply?" }, class: "btn btn--text" %>
+                      <% if can_edit_activity || reply.author_id == current_user.id %>
+                        <%= link_to "Delete", reply, data: { turbo_method: :delete, turbo_confirm: "Delete this reply?" }, class: "btn btn--text" %>
+                      <% end %>
                     </footer>
                   </div>
                 <% end %>
               </div>
             <% end %>
-            <div class="update__reply-form">
-              <%= form_with(model: [@activity, Comment.new], local: true, class: "reply-form") do |form| %>
-                <%= form.hidden_field :parent_id, value: update.id %>
-                <div class="field">
-                  <%= form.label :body, "Add a reply", class: "visually-hidden" %>
-                  <%= form.text_area :body, rows: 2, placeholder: "Write a comment…" %>
-                </div>
-                <div class="actions">
-                  <%= form.submit "Reply", class: "btn btn--ghost" %>
-                </div>
-              <% end %>
-            </div>
-            <footer class="update__actions">
-              <%= link_to "Delete update", update,
-                    data: { turbo_method: :delete, turbo_confirm: "Delete this update?" },
-                    class: "btn btn--text" %>
-            </footer>
+            <% if can_comment %>
+              <div class="update__reply-form">
+                <%= form_with(model: [@activity, Comment.new], local: true, class: "reply-form") do |form| %>
+                  <%= form.hidden_field :parent_id, value: update.id %>
+                  <div class="field">
+                    <%= form.label :body, "Add a reply", class: "visually-hidden" %>
+                    <%= form.text_area :body, rows: 2, placeholder: "Write a comment…" %>
+                  </div>
+                  <div class="actions">
+                    <%= form.submit "Reply", class: "btn btn--ghost" %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+            <% if can_edit_activity || update.author_id == current_user.id %>
+              <footer class="update__actions">
+                <%= link_to "Delete update", update,
+                      data: { turbo_method: :delete, turbo_confirm: "Delete this update?" },
+                      class: "btn btn--text" %>
+              </footer>
+            <% end %>
           </li>
         <% end %>
       </ul>

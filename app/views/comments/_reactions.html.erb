@@ -1,15 +1,18 @@
 <% grouped = comment.comment_reactions.group_by(&:emoji) %>
+<% can_react = can_comment_on_activity?(comment.activity) %>
 <div class="update__reactions">
-  <div class="update__reaction-buttons">
-    <% reaction_emojis.each do |emoji| %>
-      <% user_reaction = comment.comment_reactions.find { |r| r.user_id == current_user.id && r.emoji == emoji } %>
-      <%= button_to emoji,
-          comment_comment_reactions_path(comment, emoji: emoji),
-          method: :post,
-          class: ["reaction-btn", ("reaction-btn--active" if user_reaction)].compact.join(" "),
-          form: { data: { turbo_stream: true } } %>
-    <% end %>
-  </div>
+  <% if can_react %>
+    <div class="update__reaction-buttons">
+      <% reaction_emojis.each do |emoji| %>
+        <% user_reaction = comment.comment_reactions.find { |r| r.user_id == current_user.id && r.emoji == emoji } %>
+        <%= button_to emoji,
+            comment_comment_reactions_path(comment, emoji: emoji),
+            method: :post,
+            class: ["reaction-btn", ("reaction-btn--active" if user_reaction)].compact.join(" "),
+            form: { data: { turbo_stream: true } } %>
+      <% end %>
+    </div>
+  <% end %>
   <% if grouped.present? %>
     <div class="update__reaction-summary">
       <% grouped.each do |emoji, reactions| %>

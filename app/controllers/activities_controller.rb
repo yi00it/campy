@@ -7,7 +7,7 @@ class ActivitiesController < ApplicationController
   before_action :set_assignable_users, only: [:new, :create, :edit, :update]
 
   def show
-    return unless authorize_project!(@activity.project)
+    return unless authorize_project!(@activity.project, ability: :read)
 
     @update  = Comment.new
     @updates = @activity.comments.roots
@@ -18,16 +18,20 @@ class ActivitiesController < ApplicationController
   end
 
   def new
-    return unless authorize_project!(@project)
+    return unless authorize_project!(@project, ability: :manage)
 
     @activity = @project.activities.new
   end
 
   def create
-    return unless authorize_project!(@project)
+    return unless authorize_project!(@project, ability: :manage)
 
     @activity = @project.activities.new(activity_params)
     if @activity.save
+      # Notify assignee if assigned during creation
+      if @activity.assignee.present?
+        NotificationService.notify_activity_assigned(@activity, current_user)
+      end
       redirect_to project_path(@project), notice: "Activity created."
     else
       render :new, status: :unprocessable_entity
@@ -35,29 +39,46 @@ class ActivitiesController < ApplicationController
   end
 
   def edit
-    return unless authorize_project!(@activity.project)
+    return unless authorize_project!(@activity.project, ability: :manage)
   end
 
   def update
-    return unless authorize_project!(@activity.project)
+    return unless authorize_project!(@activity.project, ability: :manage)
+
+    # Track if assignee changed
+    assignee_changed = @activity.will_save_change_to_assignee_id?
+    old_assignee_id = @activity.assignee_id
 
     if @activity.update(activity_params)
-      redirect_to @activity, notice: "Activity updated."
+      # Send appropriate notification
+      if assignee_changed && @activity.assignee.present? && @activity.assignee_id != current_user.id
+        NotificationService.notify_activity_assigned(@activity, current_user)
+      elsif !assignee_changed
+        NotificationService.notify_activity_updated(@activity, current_user)
+      end
+
+      respond_to do |format|
+        format.html { redirect_to @activity, notice: "Activity updated." }
+        format.json { render json: { success: true, activity: @activity }, status: :ok }
+      end
     else
-      render :edit, status: :unprocessable_entity
+      respond_to do |format|
+        format.html { render :edit, status: :unprocessable_entity }
+        format.json { render json: { success: false, errors: @activity.errors }, status: :unprocessable_entity }
+      end
     end
   end
 
   def destroy
     project = @activity.project
-    return unless authorize_project!(project)
+    return unless authorize_project!(project, ability: :manage)
 
     @activity.destroy
     redirect_to project_path(project), notice: "Activity deleted."
   end
 
   def toggle_done
-    return unless authorize_project!(@activity.project)
+    return unless authorize_project!(@activity.project, ability: :update_status, activity: @activity)
 
     @activity.toggle!(:is_done)
     @project = @activity.project
@@ -98,11 +119,23 @@ class ActivitiesController < ApplicationController
 
   def set_assignable_users
     project = @project || @activity&.project
-    @assignable_users = project ? project.team_members : []
+    @assignable_users = project ? project.assignable_members : []
   end
 
-  def authorize_project!(project)
-    return true if project.accessible_by?(current_user)
+  def authorize_project!(project, ability: :read, activity: nil)
+    allowed = case ability
+              when :read
+                project.accessible_by?(current_user)
+              when :manage
+                can_manage_project?(project)
+              when :update_status
+                can_manage_project?(project) ||
+                  (project_role(project) == :subcontractor && activity&.assignee_id == current_user.id)
+              else
+                false
+              end
+
+    return true if allowed
 
     redirect_to projects_path, alert: "Not allowed."
     false

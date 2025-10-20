@@ -10,26 +10,37 @@
 
   <div class="split">
     <div class="stack">
-      <div class="card">
-        <h2 class="section__title section__title--sm section__title--flush">Existing zones</h2>
-        <% if @zones.any? %>
-          <ul class="stack list-reset mt-md">
-            <% @zones.each do |zone| %>
-              <li class="card card--flat">
-                <div class="list-inline list-inline--spread">
-                  <strong><%= zone.name %></strong>
-                  <span class="list-inline">
-                    <%= link_to "Edit", edit_zone_path(zone), class: "btn btn--ghost" %>
-                    <%= link_to "Delete", zone, data: { turbo_method: :delete, turbo_confirm: "Delete zone '#{zone.name}'?" }, class: "btn btn--text" %>
-                  </span>
-                </div>
-              </li>
-            <% end %>
-          </ul>
-        <% else %>
-          <div class="empty-state">No zones yet. Add the key building areas to map out the project.</div>
-        <% end %>
-      </div>
+      <% if @zones.any? %>
+        <div class="activity-table-wrapper">
+          <table class="activity-table" role="grid">
+            <thead>
+              <tr>
+                <th scope="col">Zone Name</th>
+                <th scope="col" class="activity-table__actions-head">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @zones.each do |zone| %>
+                <tr>
+                  <td class="activity-table__cell activity-table__cell--primary" data-label="Zone Name">
+                    <strong><%= zone.name %></strong>
+                  </td>
+                  <td class="activity-table__cell activity-table__cell--actions" data-label="Actions">
+                    <div class="activity-table__actions">
+                      <%= link_to "Edit", edit_zone_path(zone), class: "btn btn--ghost" %>
+                      <%= link_to "Delete", zone, data: { turbo_method: :delete, turbo_confirm: "Delete zone '#{zone.name}'?" }, class: "btn btn--text" %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="empty-state">
+          <p>No zones yet. Add the key building areas to map out the project.</p>
+        </div>
+      <% end %>
     </div>
 
     <aside class="card">

@@ -104,7 +104,7 @@
     <%= form.collection_select :assignee_id,
           @assignable_users,
           :id,
-          :email,
+          :display_name,
           { include_blank: "Unassigned" },
           { class: "select" } %>
   </div>

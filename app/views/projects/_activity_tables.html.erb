@@ -2,9 +2,11 @@
   <div class="section__head section__head--tight">
     <div class="list-inline">
       <h2 class="section__title section__title--sm">Open activities</h2>
-      <span class="push-right">
-        <%= link_to "New activity", new_project_activity_path(project), class: "btn btn--primary" %>
-      </span>
+      <% if can_manage_project?(project) %>
+        <span class="push-right">
+          <%= link_to "New activity", new_project_activity_path(project), class: "btn btn--primary" %>
+        </span>
+      <% end %>
     </div>
   </div>
 
@@ -30,7 +32,9 @@
   <% else %>
     <div class="empty-state">
       <p>No activities yet. Draft your first one to set the tone—due dates default to tomorrow so you keep momentum.</p>
-      <%= link_to "Create an activity", new_project_activity_path(project), class: "btn btn--primary" %>
+      <% if can_manage_project?(project) %>
+        <%= link_to "Create an activity", new_project_activity_path(project), class: "btn btn--primary" %>
+      <% end %>
     </div>
   <% end %>
 

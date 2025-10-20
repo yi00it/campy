@@ -2,9 +2,17 @@ class MessagesController < ApplicationController
   before_action :set_conversation
 
   def create
+    unless conversation_partners_allowed?
+      redirect_to conversations_path, alert: "Not allowed."
+      return
+    end
+
     @message = @conversation.messages.build(message_params.merge(user: current_user))
 
     if @message.save
+      # Send notification for new message
+      NotificationService.notify_message_received(@message)
+
       respond_to do |format|
         format.turbo_stream
         format.html { redirect_to conversation_path(@conversation) }
@@ -28,5 +36,11 @@ class MessagesController < ApplicationController
 
   def message_params
     params.require(:message).permit(:body)
+  end
+
+  def conversation_partners_allowed?
+    @conversation.users.where.not(id: current_user.id).all? do |user|
+      can_message_user?(user)
+    end
   end
 end

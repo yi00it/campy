@@ -1,0 +1,72 @@
+<section class="section">
+  <header class="section__head">
+    <h1 class="section__title">Preview Import</h1>
+    <p class="section__lead">Review the activities before importing into <%= @project.name %></p>
+  </header>
+
+  <% if @errors.present? %>
+    <div class="alert alert--error">
+      <h3>Validation Warnings:</h3>
+      <ul>
+        <% @errors.each do |error| %>
+          <li><%= error %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="card">
+    <div class="card__header">
+      <h2 class="card__title">Preview (showing first 10 rows)</h2>
+      <p class="meta"><%= @preview_activities.count %> activities will be imported</p>
+    </div>
+
+    <div class="card__body" style="overflow-x: auto;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Activity Name</th>
+            <th>Start Date</th>
+            <th>Finish Date</th>
+            <th>Duration</th>
+            <th>Assignee</th>
+            <th>Discipline</th>
+            <th>Zone</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @preview_activities.each do |activity_data| %>
+            <% attrs = activity_data[:attributes] %>
+            <% row_data = activity_data[:row_data] %>
+            <tr>
+              <td><strong><%= attrs[:title] %></strong></td>
+              <td><%= attrs[:start_on]&.to_fs(:long) || row_data["Start Date"] %></td>
+              <td><%= attrs[:due_on]&.to_fs(:long) || row_data["Finish Date"] %></td>
+              <td><%= attrs[:duration_days] ? "#{attrs[:duration_days]}d" : "-" %></td>
+              <td><%= row_data["Assignee Email"] %></td>
+              <td><%= row_data["Discipline"] %></td>
+              <td><%= row_data["Zone"] %></td>
+              <td>
+                <% if attrs[:is_done] %>
+                  <span class="pill pill--success">Complete</span>
+                <% else %>
+                  <span class="pill">Not Started</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card__footer">
+      <%= form_with url: project_activities_import_path(@project), method: :post, local: true do |f| %>
+        <%= f.hidden_field :confirm, value: "true" %>
+        <%= f.submit "Confirm and Import", class: "btn btn--primary", data: { confirm: "Are you sure you want to import #{@preview_activities.count} activities?" } %>
+        <%= link_to "Cancel", @project, class: "btn btn--ghost" %>
+        <%= link_to "Back to Upload", new_project_activities_import_path(@project), class: "btn btn--secondary" %>
+      <% end %>
+    </div>
+  </div>
+</section>

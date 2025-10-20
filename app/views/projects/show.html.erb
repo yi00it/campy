@@ -29,36 +29,162 @@
           active_count: @active_count,
           completed_count: @completed_count %>
 
-      <div class="card">
+      <div class="card card--team">
         <h3 class="section__title section__title--sm section__title--flush">Team</h3>
         <p class="meta">Add teammates so they can add updates, assign activities, and keep things moving.</p>
-        <ul class="list-reset stack mt-md">
-          <li class="list-inline list-inline--spread">
-            <span><strong><%= @project.owner.email %></strong> <span class="meta">(Owner)</span></span>
-          </li>
-          <% @project_memberships.each do |membership| %>
-            <li class="list-inline list-inline--spread">
-              <span><strong><%= membership.user.email %></strong></span>
-              <% if @project.owner == current_user %>
-                <%= link_to "Remove", project_project_membership_path(@project, membership),
-                            data: { turbo_method: :delete, turbo_confirm: "Remove #{membership.user.email}?" },
-                            class: "btn btn--text" %>
+        <% role_options = ProjectMembership::ROLES.map { |role| [role.titleize, role] } %>
+        <div class="team-avatar-wrapper mt-md">
+          <ul class="team-avatar-list list-reset">
+            <li class="team-avatar" tabindex="0">
+              <%= link_to user_path(@project.owner), class: "team-avatar__link", data: { turbo_frame: "_top" } do %>
+                <div class="team-avatar__image">
+                  <%= avatar_for(@project.owner, size: 48).presence || content_tag(:span, @project.owner.display_name.first&.upcase, class: "nav__avatar-placeholder") %>
+                </div>
               <% end %>
+              <div class="team-avatar__tooltip" role="tooltip">
+                <strong><%= @project.owner.display_name %></strong>
+                <span class="meta">Owner</span>
+                <span class="meta"><%= @project.owner.email %></span>
+              </div>
             </li>
-          <% end %>
-        </ul>
+            <% @project_memberships.each do |membership| %>
+              <li class="team-avatar" tabindex="0">
+                <%= link_to user_path(membership.user), class: "team-avatar__link", data: { turbo_frame: "_top" } do %>
+                  <div class="team-avatar__image">
+                    <%= avatar_for(membership.user, size: 48).presence || content_tag(:span, membership.user.display_name.first&.upcase, class: "nav__avatar-placeholder") %>
+                  </div>
+                <% end %>
+                <div class="team-avatar__tooltip" role="tooltip">
+                  <strong><%= membership.user.display_name %></strong>
+                  <span class="meta"><%= membership.role.titleize %></span>
+                  <span class="meta"><%= membership.user.email %></span>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+        </div>
 
         <% if @project.owner == current_user %>
-          <hr class="hr">
-          <%= form_with(model: [@project, @membership], url: project_project_memberships_path(@project), local: true) do |form| %>
-            <div class="field">
-              <%= form.label :email, "Invite by email" %>
-              <%= form.email_field :email, placeholder: "teammate@example.com" %>
-            </div>
-            <div class="actions">
-              <%= form.submit "Add teammate", class: "btn btn--primary" %>
-            </div>
+          <% if @pending_invitations.present? %>
+            <hr class="hr">
+            <p class="meta meta--note">Pending invitations</p>
+            <ul class="list-reset stack">
+              <% @pending_invitations.each do |invitation| %>
+                <li class="list-inline list-inline--spread meta">
+                  <span>
+                    <strong><%= invitation.email %></strong>
+                    <span class="meta">Invited <%= time_ago_in_words(invitation.created_at) %> ago · <%= invitation.role.titleize %></span>
+                  </span>
+                  <%= button_to "Cancel",
+                        project_project_invitation_path(@project, invitation),
+                        method: :delete,
+                        form: { class: "inline-form", data: { turbo_confirm: "Cancel invitation for #{invitation.email}?" } },
+                        class: "btn btn--text" %>
+                </li>
+              <% end %>
+            </ul>
           <% end %>
+
+          <hr class="hr">
+          <div class="list-inline">
+            <div class="hero__cta" data-controller="modal">
+              <button type="button"
+                      class="btn btn--primary"
+                      data-action="modal#open">
+              Invite teammates
+              </button>
+              <div class="modal" data-modal-target="container" hidden>
+                <div class="modal__backdrop" data-modal-target="backdrop" data-action="click->modal#handleBackdrop" aria-hidden="true"></div>
+                <div class="modal__dialog" data-modal-target="dialog" role="dialog" aria-modal="true">
+                  <button type="button"
+                          class="modal__close btn btn--text"
+                          data-action="modal#close"
+                          data-modal-close
+                          aria-label="Close invite dialog">
+                    Close
+                  </button>
+                  <div class="modal__content">
+                    <h3 class="section__title section__title--sm section__title--flush">Invite a teammate</h3>
+                    <p class="meta">Send an invite email and pick the right access level.</p>
+                    <%= form_with(model: [@project, @membership],
+                                  url: project_project_memberships_path(@project),
+                                  local: true) do |form| %>
+                      <div class="field">
+                        <%= form.label :email, "Email address" %>
+                        <%= form.email_field :email, placeholder: "teammate@example.com", class: "form__input" %>
+                      </div>
+                      <div class="field">
+                        <%= form.label :role, "Role" %>
+                        <%= form.select :role, options_for_select(role_options), {}, class: "form__select" %>
+                      </div>
+                      <div class="actions">
+                        <%= form.submit "Send invite", class: "btn btn--primary" %>
+                        <button type="button" class="btn btn--ghost" data-action="modal#close" data-modal-close>Cancel</button>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="hero__cta" data-controller="modal">
+              <button type="button"
+                      class="btn btn--ghost"
+                      data-action="modal#open">
+                Manage team
+              </button>
+              <div class="modal" data-modal-target="container" hidden>
+                <div class="modal__backdrop" data-modal-target="backdrop" data-action="click->modal#handleBackdrop" aria-hidden="true"></div>
+                <div class="modal__dialog" data-modal-target="dialog" role="dialog" aria-modal="true">
+                  <button type="button"
+                          class="modal__close btn btn--text"
+                          data-action="modal#close"
+                          data-modal-close
+                          aria-label="Close manage roles dialog">
+                    Close
+                  </button>
+                  <div class="modal__content">
+                    <h3 class="section__title section__title--sm section__title--flush">Manage team roles</h3>
+                    <p class="meta">Update access levels for your project teammates.</p>
+                    <div class="team-role-manager stack">
+                      <div class="team-role-manager__row">
+                        <div>
+                          <strong><%= @project.owner.display_name %></strong>
+                          <span class="meta">Owner</span>
+                          <span class="meta"><%= @project.owner.email %></span>
+                        </div>
+                      </div>
+                      <% @project_memberships.each do |membership| %>
+                        <div class="team-role-manager__row">
+                          <div>
+                            <strong><%= membership.user.display_name %></strong>
+                            <span class="meta"><%= membership.user.email %></span>
+                          </div>
+                          <div class="team-role-manager__actions">
+                          <%= form_with model: [@project, membership],
+                                        url: project_project_membership_path(@project, membership),
+                                        method: :patch,
+                                        local: true,
+                                        html: { class: "inline-form team-role-manager__form" } do |form| %>
+                              <%= form.select :role,
+                                              options_for_select(role_options, membership.role),
+                                              {},
+                                              class: "form__select form__select--condensed" %>
+                              <%= form.submit "Save", class: "btn btn--primary btn--sm" %>
+                            <% end %>
+                            <%= link_to "Remove",
+                                        project_project_membership_path(@project, membership),
+                                        data: { turbo_method: :delete, turbo_confirm: "Remove #{membership.user.display_name}?" },
+                                        class: "btn btn--error btn--sm" %>
+                          </div>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         <% end %>
       </div>
     </aside>

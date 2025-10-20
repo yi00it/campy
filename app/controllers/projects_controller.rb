@@ -6,10 +6,7 @@ class ProjectsController < ApplicationController
   before_action :authorize_project_owner!, only: [:edit, :update, :destroy]
 
   def index
-    @projects = Project.left_outer_joins(:project_memberships)
-                       .where("projects.owner_id = :user_id OR project_memberships.user_id = :user_id", user_id: current_user.id)
-                       .distinct
-                       .order(created_at: :desc)
+    @projects = Project.accessible_to(current_user).order(created_at: :desc)
   end
 
   def show
@@ -20,6 +17,7 @@ class ProjectsController < ApplicationController
     @completed_count = @completed_activities.count
     @project_memberships = @project.project_memberships.includes(:user)
     @membership = @project.project_memberships.new
+    @pending_invitations = @project.project_invitations.pending if @project.owner == current_user
   end
 
   def new
@@ -53,9 +51,19 @@ class ProjectsController < ApplicationController
   def gantt
     @activities = @project.activities.includes(:assignee, :discipline, :zone).order(start_on: :asc, due_on: :asc, created_at: :asc)
     if @activities.any?
-      @timeline_start = @activities.map(&:start_on).compact.min || Date.current
-      @timeline_end = @activities.map(&:due_on).compact.max || @timeline_start
-      @timeline_end = @timeline_start if @timeline_end < @timeline_start
+      starts = @activities.map(&:start_on).compact
+      ends = @activities.map(&:due_on).compact
+
+      # Calculate timeline based on actual activity dates only
+      reference_start = starts.min || Date.current
+      reference_end = ends.max || reference_start
+
+      # Add padding around the activity dates for better visualization
+      padded_start = reference_start.beginning_of_week(:monday) - 1.week
+      padded_end = (reference_end + 1.week).end_of_week(:monday)
+
+      @timeline_start = padded_start
+      @timeline_end = [padded_end, @timeline_start].max
     else
       @timeline_start = Date.current
       @timeline_end = @timeline_start

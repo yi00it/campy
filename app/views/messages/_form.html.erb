@@ -2,10 +2,17 @@
   <%= form_with model: [conversation, message], data: { controller: "message-form" } do |form| %>
     <div class="field">
       <%= form.label :body, "Message" %>
-      <%= form.text_area :body, rows: 2, autofocus: true %>
+      <%= form.text_area :body,
+            rows: 2,
+            data: {
+              action: "keydown->message-form#keydown",
+              "message-form-target": "input"
+            } %>
     </div>
     <div class="actions">
-      <%= form.submit "Send", class: "btn btn--primary" %>
+      <%= form.submit "Send",
+            class: "btn btn--primary",
+            data: { "message-form-target": "submit" } %>
     </div>
   <% end %>
 <% end %>

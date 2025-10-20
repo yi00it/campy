@@ -1,5 +1,6 @@
 <% show_project = local_assigns.fetch(:show_project, false) %>
 <% completed = local_assigns.fetch(:completed, false) %>
+<% can_toggle = can_manage_project?(activity.project) || (project_role(activity.project) == :subcontractor && activity.assignee_id == current_user.id) %>
 <tr id="<%= dom_id(activity) %>" class="activity-table__row">
   <td class="activity-table__cell activity-table__cell--primary" data-label="Activity">
     <div class="activity-table__title">
@@ -40,15 +41,17 @@
     <% if show_project %>
       <span class="meta"><%= activity.project.name %></span>
     <% else %>
-      <span class="meta"><%= activity.assignee&.email || "Unassigned" %></span>
+      <span class="meta"><%= activity.assignee&.display_name || "Unassigned" %></span>
     <% end %>
   </td>
   <td class="activity-table__cell activity-table__cell--actions" data-label="Actions">
-    <div class="activity-table__actions">
-      <%= button_to (activity.is_done ? "Mark as undone" : "Mark as done"),
-          toggle_done_activity_path(activity),
-          method: :patch,
-          class: "btn btn--text" %>
-    </div>
+    <% if can_toggle %>
+      <div class="activity-table__actions">
+        <%= button_to (activity.is_done ? "Mark as undone" : "Mark as done"),
+            toggle_done_activity_path(activity),
+            method: :patch,
+            class: "btn btn--text" %>
+      </div>
+    <% end %>
   </td>
 </tr>

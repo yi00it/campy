@@ -4,6 +4,15 @@
     <p class="section__lead">Keep it short, sharp, and reassuring—just like Basecamp. Set the zone and discipline so the team knows where the work sits.</p>
   </header>
 
+  <div class="card card--soft mb-md">
+    <div class="list-inline list-inline--spread">
+      <p class="meta">
+        Importing a whole schedule? Upload an Excel template to create activities in bulk instead.
+      </p>
+      <%= link_to "Import from Excel", new_project_activities_import_path(@project), class: "btn btn--secondary" %>
+    </div>
+  </div>
+
   <div class="card">
     <%= render "form", activity: @activity, project: @project, disciplines: @disciplines, zones: @zones %>
   </div>

@@ -21,7 +21,9 @@ export default class extends Controller {
     if (Number.isNaN(startDate.getTime())) return
 
     const dueDate = new Date(startDate)
-    dueDate.setDate(dueDate.getDate() + durationValue)
+    // Duration represents the number of days the task spans (inclusive)
+    // So a 5-day task starting Monday should end Friday (start + 4 days)
+    dueDate.setDate(dueDate.getDate() + durationValue - 1)
 
     const formatted = dueDate.toISOString().slice(0, 10)
     this.dueTarget.value = formatted

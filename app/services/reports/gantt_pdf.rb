@@ -4,12 +4,33 @@ module Reports
   class GanttPdf
     include ActionView::Helpers::NumberHelper
 
-    PAGE_MARGIN = 36
-    HEADER_HEIGHT = 40
-    FOOTER_HEIGHT = 30
-    BAR_HEIGHT = 18
-    BAR_GAP = 12
-    LEFT_COLUMN_WIDTH = 200
+    # Professional Primavera-style design constants
+    PAGE_MARGIN = 40
+    HEADER_HEIGHT = 120
+    FOOTER_HEIGHT = 40
+    ROW_HEIGHT = 28
+    BAR_HEIGHT = 16
+    LEFT_COLUMN_WIDTH = 380
+
+    # Color scheme - Professional blue/gray palette like Primavera P6
+    PRIMARY_BLUE = "003f87"
+    ACCENT_BLUE = "0066cc"
+    HEADER_BG = "1a4d7a"
+    GRID_LINE_COLOR = "c8d1dc"
+    GRID_LINE_HEAVY = "7d8da3"
+    WEEKEND_FILL_COLOR = "f0f4f8"
+    ROW_ALT_COLOR = "fafbfc"
+
+    # Bar colors - Enhanced with gradients
+    BAR_NOT_STARTED = "94a3b8"  # Gray for future tasks
+    BAR_IN_PROGRESS = "2563eb"  # Blue for in progress
+    BAR_COMPLETE = "16a34a"     # Green for complete
+    BAR_CRITICAL = "dc2626"     # Red for critical path
+
+    # Text colors
+    TEXT_PRIMARY = "1e293b"
+    TEXT_SECONDARY = "64748b"
+    TEXT_WHITE = "ffffff"
 
     def initialize(project, activities, timeline_start, timeline_end)
       @project = project
@@ -20,10 +41,20 @@ module Reports
     end
 
     def render
-      pdf = ::Prawn::Document.new(page_layout: :landscape, margin: PAGE_MARGIN)
-      draw_header(pdf)
-      draw_footer(pdf)
-      draw_timeline(pdf)
+      pdf = ::Prawn::Document.new(page_layout: :landscape, page_size: "A3", margin: PAGE_MARGIN)
+      pdf.font "Helvetica"
+
+      draw_repeating_header(pdf)
+      draw_repeating_footer(pdf)
+
+      pdf.bounding_box(
+        [pdf.bounds.left, pdf.bounds.top - HEADER_HEIGHT],
+        width: pdf.bounds.width,
+        height: pdf.bounds.height - HEADER_HEIGHT - FOOTER_HEIGHT
+      ) do
+        draw_body(pdf)
+      end
+
       pdf.render
     end
 
@@ -31,133 +62,494 @@ module Reports
 
     attr_reader :project, :activities, :timeline_start, :timeline_end, :total_days
 
-    def draw_header(pdf)
-      pdf.bounding_box([0, pdf.cursor], width: pdf.bounds.width, height: HEADER_HEIGHT) do
-        pdf.text project.name, size: 20, style: :bold
-        pdf.move_down 4
-        info = []
-        info << "Owner: #{project.owner.email}" if project.owner
-        info << "Generated: #{I18n.l(Time.current, format: :long)}"
-        pdf.text info.join("  •  "), size: 10, color: "555555"
+    def draw_repeating_header(pdf)
+      pdf.repeat(:all) do
+        pdf.bounding_box([pdf.bounds.left, pdf.bounds.top], width: pdf.bounds.width, height: HEADER_HEIGHT) do
+          # Blue header bar with white text (Primavera style)
+          pdf.fill_color HEADER_BG
+          pdf.fill_rectangle [0, pdf.cursor], pdf.bounds.width, 50
+
+          # Project title and logo area
+          pdf.fill_color TEXT_WHITE
+          pdf.bounding_box([12, pdf.cursor - 10], width: pdf.bounds.width - 24, height: 30) do
+            pdf.font_size 18 do
+              pdf.text "PROJECT SCHEDULE REPORT", style: :bold
+            end
+          end
+
+          pdf.move_down 50
+
+          # Project information table
+          pdf.fill_color TEXT_PRIMARY
+          info_data = [
+            ["Project:", project.name, "Schedule Period:", "#{timeline_start.strftime('%d-%b-%Y')} to #{timeline_end.strftime('%d-%b-%Y')}"],
+            ["Owner:", project.owner&.display_name || "N/A", "Total Activities:", activities.count.to_s],
+            ["Report Date:", Time.current.strftime("%d-%b-%Y %H:%M"), "Completed:", "#{activities.count(&:is_done)} (#{calculate_completion_percentage}%)"]
+          ]
+
+          pdf.font_size 8 do
+            y_position = pdf.cursor
+
+            info_data.each_with_index do |row, idx|
+              y_pos = y_position - (idx * 14)
+
+              # Left column label
+              pdf.fill_color TEXT_SECONDARY
+              pdf.draw_text row[0], at: [0, y_pos], style: :bold
+
+              # Left column value
+              pdf.fill_color TEXT_PRIMARY
+              pdf.draw_text row[1], at: [80, y_pos]
+
+              # Right column label
+              pdf.fill_color TEXT_SECONDARY
+              pdf.draw_text row[2], at: [pdf.bounds.width / 2, y_pos], style: :bold
+
+              # Right column value
+              pdf.fill_color TEXT_PRIMARY
+              pdf.draw_text row[3], at: [pdf.bounds.width / 2 + 120, y_pos]
+            end
+
+            pdf.move_down 46
+          end
+
+          # Divider line
+          pdf.stroke_color GRID_LINE_HEAVY
+          pdf.line_width 1.5
+          pdf.stroke_horizontal_rule
+          pdf.line_width 0.5
+          pdf.stroke_color GRID_LINE_COLOR
+        end
       end
-      pdf.move_down 10
     end
 
-    def draw_footer(pdf)
-      pdf.number_pages "Page <page> of <total>", at: [pdf.bounds.left, PAGE_MARGIN / 2], size: 9
+    def calculate_completion_percentage
+      return 0 if activities.empty?
+      ((activities.count(&:is_done).to_f / activities.count) * 100).round
     end
 
-    def draw_timeline(pdf)
-      y_cursor = nil
+    def draw_repeating_footer(pdf)
+      pdf.repeat(:all) do
+        # Top border line
+        pdf.stroke_color GRID_LINE_HEAVY
+        pdf.line_width 1
+        pdf.stroke_line [pdf.bounds.left, pdf.bounds.bottom + FOOTER_HEIGHT - 2],
+                       [pdf.bounds.right, pdf.bounds.bottom + FOOTER_HEIGHT - 2]
+        pdf.line_width 0.5
+
+        pdf.bounding_box([pdf.bounds.left, pdf.bounds.bottom + FOOTER_HEIGHT - 6],
+                        width: pdf.bounds.width, height: FOOTER_HEIGHT - 6) do
+          pdf.font_size 7 do
+            # Left side - Project info
+            pdf.fill_color TEXT_SECONDARY
+            pdf.draw_text "#{project.name} - Gantt Chart", at: [0, 16]
+            pdf.draw_text "Generated by Campy PM", at: [0, 6]
+
+            # Center - Confidentiality notice
+            center_text = "CONFIDENTIAL - PROJECT SCHEDULE"
+            center_width = pdf.width_of(center_text, size: 7)
+            pdf.fill_color TEXT_PRIMARY
+            pdf.draw_text center_text, at: [(pdf.bounds.width - center_width) / 2, 11], style: :bold
+
+            # Right side - Page numbers
+            pdf.fill_color TEXT_SECONDARY
+            page_text = "Page <page> of <total>"
+            page_width = pdf.width_of("Page 99 of 99", size: 7)
+            pdf.number_pages(page_text, at: [pdf.bounds.width - page_width, 16], size: 7)
+
+            # Print date/time
+            pdf.draw_text Time.current.strftime("Printed: %d-%b-%Y %H:%M"),
+                         at: [pdf.bounds.width - page_width, 6]
+          end
+        end
+      end
+    end
+
+    def draw_body(pdf)
       column_x = pdf.bounds.left
       grid_width = pdf.bounds.width - LEFT_COLUMN_WIDTH
       day_width = grid_width / total_days.to_f
 
-      if activities.any?
-        draw_timeline_header(pdf, column_x, grid_width, day_width)
-        y_cursor = pdf.cursor
+      return draw_empty_state(pdf, column_x, grid_width, day_width) if activities.blank?
 
-        activities.each do |activity|
-          if y_cursor < FOOTER_HEIGHT + BAR_HEIGHT
-            pdf.start_new_page
-            draw_header(pdf)
+      draw_timeline_header(pdf, column_x, grid_width, day_width)
+      pdf.move_down 6
 
-            column_x = pdf.bounds.left
-            grid_width = pdf.bounds.width - LEFT_COLUMN_WIDTH
-            day_width = grid_width / total_days.to_f
+      legend_height = 24
 
-            draw_timeline_header(pdf, column_x, grid_width, day_width)
-            y_cursor = pdf.cursor
-          end
+      activities.each_with_index do |activity, index|
+        remaining = activities.length - index
+        buffer = remaining == 1 ? legend_height + 20 : 0
 
-          draw_activity_row(pdf, activity, column_x, grid_width, day_width, y_cursor)
-          y_cursor -= (BAR_HEIGHT + BAR_GAP)
+        if available_space(pdf) < ROW_HEIGHT + buffer
+          pdf.start_new_page
+          draw_timeline_header(pdf, column_x, grid_width, day_width)
+          pdf.move_down 6
         end
-      else
-        draw_timeline_header(pdf, column_x, grid_width, day_width)
+
+        top = pdf.cursor
+        draw_activity_row(pdf, activity, index, column_x, grid_width, day_width, top)
+        pdf.move_cursor_to(top - ROW_HEIGHT)
       end
 
-      summary_cursor = y_cursor || pdf.cursor
-      pdf.move_cursor_to(summary_cursor)
-      pdf.move_down 20
-      draw_project_summary(pdf)
+      pdf.move_down 16
+      if available_space(pdf) < legend_height + 20
+        pdf.start_new_page
+      end
+      draw_legend(pdf)
     end
 
     def draw_timeline_header(pdf, column_x, grid_width, day_width)
-      pdf.bounding_box([column_x, pdf.cursor], width: LEFT_COLUMN_WIDTH, height: 20) do
-        pdf.text "Activity", size: 12, style: :bold
-      end
-      pdf.bounding_box([column_x + LEFT_COLUMN_WIDTH, pdf.cursor], width: grid_width, height: 20) do
-        pdf.stroke_color "DDDDDD"
-        total_days.times do |i|
-          x_pos = i * day_width
-          pdf.stroke_line [x_pos, pdf.bounds.top], [x_pos, pdf.bounds.bottom]
-          if (timeline_start + i).day == 1
-            pdf.draw_text (timeline_start + i).strftime("%b %Y"), at: [x_pos + 2, pdf.bounds.top + 12], size: 9
+      header_height = 50
+      top = pdf.cursor
+
+      # Header background with gradient effect
+      pdf.fill_color "e8eef5"
+      pdf.fill_rectangle [column_x, top], LEFT_COLUMN_WIDTH, header_height
+      pdf.fill_rectangle [column_x + LEFT_COLUMN_WIDTH, top], grid_width, header_height
+
+      # Border
+      pdf.stroke_color GRID_LINE_HEAVY
+      pdf.line_width 1.2
+      pdf.rectangle [column_x, top], LEFT_COLUMN_WIDTH, header_height
+      pdf.rectangle [column_x + LEFT_COLUMN_WIDTH, top], grid_width, header_height
+      pdf.stroke
+      pdf.line_width 0.5
+
+      # Left column header with multiple fields
+      pdf.bounding_box([column_x + 8, top - 6], width: LEFT_COLUMN_WIDTH - 16, height: header_height - 12) do
+        pdf.fill_color TEXT_PRIMARY
+        pdf.font_size 9 do
+          pdf.text "Activity Name", style: :bold
+          pdf.move_down 2
+          pdf.fill_color TEXT_SECONDARY
+          pdf.font_size 7 do
+            pdf.text "ID  •  Start  •  Finish  •  Duration  •  Resource"
           end
         end
-        pdf.stroke_horizontal_rule
       end
-      pdf.move_down 10
+
+      # Timeline header
+      pdf.bounding_box([column_x + LEFT_COLUMN_WIDTH, top], width: grid_width, height: header_height) do
+        draw_enhanced_month_band(pdf, day_width)
+        draw_enhanced_week_band(pdf, day_width)
+      end
+
+      pdf.move_down header_height
+      pdf.cursor
     end
 
-    def draw_activity_row(pdf, activity, column_x, grid_width, day_width, y_cursor)
-      pdf.bounding_box([column_x, y_cursor], width: LEFT_COLUMN_WIDTH, height: BAR_HEIGHT + BAR_GAP) do
-        pdf.text activity.title, size: 10, style: :bold
-        pdf.move_down 2
-        meta = []
-        meta << (activity.assignee&.email || "Unassigned")
-        if activity.start_on && activity.due_on
-          meta << "#{I18n.l(activity.start_on)} – #{I18n.l(activity.due_on)}"
+    def draw_activity_row(pdf, activity, index, column_x, grid_width, day_width, top)
+      shade_row(pdf, column_x, grid_width, top) if index.even?
+
+      # Row border
+      pdf.stroke_color GRID_LINE_COLOR
+      pdf.line_width 0.5
+      pdf.stroke_line [column_x, top - ROW_HEIGHT], [column_x + LEFT_COLUMN_WIDTH + grid_width, top - ROW_HEIGHT]
+
+      pdf.bounding_box([column_x + 6, top - 4], width: LEFT_COLUMN_WIDTH - 12, height: ROW_HEIGHT - 8) do
+        # Activity ID and name
+        pdf.fill_color TEXT_PRIMARY
+        pdf.font_size 8 do
+          activity_id = sprintf("%03d", activity.id)
+          pdf.text "#{activity_id}  #{activity.title}", style: :bold
         end
-        pdf.text meta.join("  •  "), size: 8, color: "666666"
+
+        pdf.move_down 2
+
+        # Activity details on separate line
+        pdf.fill_color TEXT_SECONDARY
+        pdf.font_size 6.5 do
+          details = []
+          details << (activity.start_on ? activity.start_on.strftime('%d-%b-%y') : "No Start")
+          details << (activity.due_on ? activity.due_on.strftime('%d-%b-%y') : "No Finish")
+          details << "#{activity.duration_days || 0}d"
+          details << (activity.assignee&.display_name || "Unassigned")
+
+          # Add discipline and zone if present
+          details << activity.discipline&.name if activity.discipline
+          details << activity.zone&.name if activity.zone
+
+          pdf.text details.join("  •  ")
+        end
       end
 
-      pdf.bounding_box([column_x + LEFT_COLUMN_WIDTH, y_cursor], width: grid_width, height: BAR_HEIGHT + BAR_GAP) do
-        draw_activity_bar(pdf, activity, day_width)
+      pdf.bounding_box([column_x + LEFT_COLUMN_WIDTH, top], width: grid_width, height: ROW_HEIGHT) do
+        draw_enhanced_activity_grid(pdf, day_width)
+        draw_enhanced_activity_bar(pdf, activity, day_width)
       end
     end
 
-    def draw_activity_bar(pdf, activity, day_width)
+    def draw_enhanced_activity_bar(pdf, activity, day_width)
       return unless activity.start_on
 
-      start_day = [(activity.start_on - timeline_start).to_i, 0].max
+      start_index = [(activity.start_on - timeline_start).to_i, 0].max
       due_date = activity.due_on || activity.start_on
-      end_day = [(due_date - timeline_start).to_i, 0].max
-      span_days = [end_day - start_day + 1, 1].max
+      end_index = [(due_date - timeline_start).to_i, total_days - 1].min
+      span = [end_index - start_index + 1, 1].max
 
-      bar_x = start_day * day_width
-      bar_width = span_days * day_width
+      bar_x = start_index * day_width
+      bar_width = span * day_width
 
-      pdf.fill_color "2c9cdb"
-      pdf.fill_rounded_rectangle [bar_x, pdf.cursor], bar_width, BAR_HEIGHT, 4
-      pdf.fill_color "ffffff"
-      label = [activity.zone&.name, activity.discipline&.name].compact.join(" • ")
-      pdf.draw_text label, at: [bar_x + 4, pdf.cursor - (BAR_HEIGHT / 2) + 4], size: 8 if label.present?
+      bar_top = pdf.bounds.top - ((ROW_HEIGHT - BAR_HEIGHT) / 2.0)
+      bar_bottom = bar_top - BAR_HEIGHT
+
+      # Determine bar color based on status
+      bar_color = if activity.is_done
+                    BAR_COMPLETE
+                  elsif activity.start_on && activity.start_on > Date.current
+                    BAR_NOT_STARTED
+                  else
+                    BAR_IN_PROGRESS
+                  end
+
+      # Draw shadow for depth
+      pdf.transparent(0.1) do
+        pdf.fill_color "000000"
+        pdf.fill_rectangle [bar_x + 1, bar_bottom - 1], bar_width, BAR_HEIGHT
+      end
+
+      # Main bar with rounded corners
+      pdf.fill_color bar_color
+      pdf.fill_rounded_rectangle [bar_x, bar_top], bar_width, BAR_HEIGHT, 3
+
+      # Add subtle border
+      pdf.transparent(0.2) do
+        pdf.stroke_color "000000"
+        pdf.stroke_rounded_rectangle [bar_x, bar_top], bar_width, BAR_HEIGHT, 3
+      end
+
+      # Progress indicator for in-progress tasks
+      if !activity.is_done && activity.start_on && activity.start_on <= Date.current
+        # Calculate progress (simplified - could be based on actual progress field)
+        days_elapsed = [(Date.current - activity.start_on).to_i, 0].max
+        total_duration = [(due_date - activity.start_on).to_i, 1].max
+        progress = [days_elapsed.to_f / total_duration, 1.0].min
+        progress_width = bar_width * progress
+
+        if progress_width > 2
+          pdf.transparent(0.6) do
+            pdf.fill_color BAR_COMPLETE
+            pdf.fill_rounded_rectangle [bar_x, bar_top], progress_width, BAR_HEIGHT, 3
+          end
+        end
+      end
+
+      # Completion percentage or label
+      if bar_width >= 35
+        pdf.fill_color TEXT_WHITE
+        if activity.is_done
+          label_text = "✓ 100%"
+        elsif activity.start_on && activity.start_on > Date.current
+          label_text = activity.duration_days ? "#{activity.duration_days}d" : ""
+        else
+          # Show progress percentage
+          days_elapsed = [(Date.current - activity.start_on).to_i, 0].max
+          total_duration = [(due_date - activity.start_on).to_i, 1].max
+          progress_pct = [(days_elapsed.to_f / total_duration * 100).round, 100].min
+          label_text = "#{progress_pct}%"
+        end
+
+        if label_text.present?
+          label_width = pdf.width_of(label_text, size: 7, style: :bold)
+          pdf.draw_text label_text,
+                       at: [bar_x + (bar_width - label_width) / 2, bar_bottom + 4],
+                       size: 7,
+                       style: :bold
+        end
+      end
+
+      pdf.fill_color "000000"
+      pdf.stroke_color GRID_LINE_COLOR
+    end
+
+    def draw_enhanced_activity_grid(pdf, day_width)
+      total_days.times do |i|
+        date = timeline_start + i
+        x = i * day_width
+
+        if date.saturday? || date.sunday?
+          pdf.fill_color WEEKEND_FILL_COLOR
+          pdf.fill_rectangle [x, pdf.bounds.top], day_width, pdf.bounds.height
+          pdf.fill_color "000000"
+        end
+
+        if date.cwday == 1
+          pdf.transparent(0.3) do
+            pdf.stroke_color GRID_LINE_HEAVY
+            pdf.stroke_line [x, pdf.bounds.top], [x, pdf.bounds.bottom]
+          end
+        end
+      end
+
+      pdf.stroke_color GRID_LINE_COLOR
+    end
+
+    def draw_legend(pdf)
+      pdf.move_down 12
+
+      # Legend title
+      pdf.fill_color TEXT_PRIMARY
+      pdf.font_size 9 do
+        pdf.text "LEGEND", style: :bold
+      end
+      pdf.move_down 6
+
+      # Legend box
+      pdf.stroke_color GRID_LINE_HEAVY
+      legend_height = 36
+      pdf.stroke_rectangle [0, pdf.cursor], pdf.bounds.width, legend_height
+
+      pdf.bounding_box([8, pdf.cursor - 6], width: pdf.bounds.width - 16, height: legend_height - 12) do
+        y_pos = pdf.cursor
+        x_offset = 0
+        item_width = 140
+
+        legend_items = [
+          { color: BAR_NOT_STARTED, label: "Not Started" },
+          { color: BAR_IN_PROGRESS, label: "In Progress" },
+          { color: BAR_COMPLETE, label: "Completed" },
+          { color: WEEKEND_FILL_COLOR, label: "Weekend", border: GRID_LINE_COLOR }
+        ]
+
+        legend_items.each_with_index do |item, idx|
+          x = x_offset + (idx * item_width)
+
+          # Bar sample
+          if item[:border]
+            pdf.fill_color item[:color]
+            pdf.fill_rectangle [x, y_pos], 20, 12
+            pdf.stroke_color item[:border]
+            pdf.stroke_rectangle [x, y_pos], 20, 12
+          else
+            pdf.fill_color item[:color]
+            pdf.fill_rounded_rectangle [x, y_pos], 20, 12, 3
+          end
+
+          # Label
+          pdf.fill_color TEXT_PRIMARY
+          pdf.draw_text item[:label], at: [x + 26, y_pos - 9], size: 8
+        end
+
+        # Additional notes on second row
+        pdf.move_down 18
+        pdf.fill_color TEXT_SECONDARY
+        pdf.font_size 7 do
+          pdf.text "• Activity bars show completion percentage  • Shaded areas indicate weekends  • Bold vertical lines mark week boundaries"
+        end
+      end
+
+      pdf.fill_color "000000"
+      pdf.stroke_color GRID_LINE_COLOR
+    end
+
+    def draw_enhanced_month_band(pdf, day_width)
+      pdf.stroke_color GRID_LINE_HEAVY
+      pdf.fill_color PRIMARY_BLUE
+      pdf.bounding_box([0, pdf.bounds.top], width: pdf.bounds.width, height: 24) do
+        each_month_span do |start_index, span, label|
+          width = span * day_width
+          x = start_index * day_width
+
+          # Background fill
+          pdf.fill_color "d6e4f5"
+          pdf.fill_rectangle [x, pdf.bounds.top], width, pdf.bounds.height
+
+          # Border
+          pdf.stroke_color GRID_LINE_HEAVY
+          pdf.stroke_rectangle [x, pdf.bounds.top], width, pdf.bounds.height
+
+          # Text
+          pdf.fill_color PRIMARY_BLUE
+          text_width = pdf.width_of(label, size: 9, style: :bold)
+          pdf.draw_text label, at: [x + (width - text_width) / 2, pdf.bounds.top - 15], size: 9, style: :bold
+        end
+      end
+    end
+
+    def draw_enhanced_week_band(pdf, day_width)
+      pdf.bounding_box([0, pdf.bounds.top - 24], width: pdf.bounds.width, height: 26) do
+        total_days.times do |i|
+          date = timeline_start + i
+          x = i * day_width
+
+          # Weekend shading
+          if date.saturday? || date.sunday?
+            pdf.fill_color WEEKEND_FILL_COLOR
+            pdf.fill_rectangle [x, pdf.bounds.top], day_width, pdf.bounds.height
+          end
+
+          # Week divider lines
+          if date.cwday == 1
+            pdf.stroke_color GRID_LINE_HEAVY
+            pdf.stroke_line [x, pdf.bounds.top], [x, pdf.bounds.bottom]
+          else
+            pdf.stroke_color GRID_LINE_COLOR
+            pdf.stroke_line [x, pdf.bounds.top], [x, pdf.bounds.bottom]
+          end
+
+          # Day labels (show every 3rd day or Mondays to avoid crowding)
+          if date.cwday == 1 || (day_width > 25 && i % 3 == 0)
+            pdf.fill_color TEXT_SECONDARY
+            day_label = date.strftime('%d')
+            label_width = pdf.width_of(day_label, size: 7)
+            pdf.draw_text day_label, at: [x + (day_width - label_width) / 2, pdf.bounds.top - 18], size: 7
+
+            # Day of week for Mondays
+            if date.cwday == 1 && day_width > 20
+              dow_label = date.strftime('%a')
+              dow_width = pdf.width_of(dow_label, size: 6)
+              pdf.fill_color TEXT_SECONDARY
+              pdf.draw_text dow_label, at: [x + (day_width - dow_width) / 2, pdf.bounds.top - 10], size: 6
+            end
+          end
+        end
+
+        # Bottom border
+        pdf.stroke_color GRID_LINE_HEAVY
+        pdf.stroke_horizontal_rule
+      end
+    end
+
+
+    def shade_row(pdf, column_x, grid_width, top)
+      pdf.fill_color ROW_ALT_COLOR
+      pdf.fill_rectangle [column_x, top], LEFT_COLUMN_WIDTH, ROW_HEIGHT
+      pdf.fill_rectangle [column_x + LEFT_COLUMN_WIDTH, top], grid_width, ROW_HEIGHT
       pdf.fill_color "000000"
     end
 
-    def draw_project_summary(pdf)
-      pdf.stroke_color "DDDDDD"
-      pdf.stroke_horizontal_rule
-      pdf.move_down 10
-      pdf.text "Project summary", size: 12, style: :bold
+    def draw_empty_state(pdf, column_x, grid_width, day_width)
+      draw_timeline_header(pdf, column_x, grid_width, day_width)
+      pdf.move_down 24
+      pdf.text "No activities scheduled.", size: 12, style: :bold
       pdf.move_down 6
-
-      summary_items = [
-        ["Owner", project.owner&.email || "-"],
-        ["Activities", activities.count],
-        ["Start date", activities.map(&:start_on).compact.min&.to_fs(:long) || "-"],
-        ["Finish date", activities.map(&:due_on).compact.max&.to_fs(:long) || "-"],
-      ]
-
-      summary_items.each do |label, value|
-        pdf.text "#{label}: <b>#{value}</b>", inline_format: true, size: 9
-        pdf.move_down 4
+      pdf.fill_color MUTED_TEXT_COLOR
+      pdf.text "Create activities to see them appear on this timeline.", size: 9
+      pdf.fill_color "000000"
+      pdf.move_down 16
+      if pdf.cursor < FOOTER_HEIGHT + 40
+        pdf.start_new_page
       end
+      draw_legend(pdf)
+    end
 
-      pdf.move_down 8
-      pdf.text "Generated at #{I18n.l(Time.current, format: :long)}", size: 8, color: "666666"
+    def each_month_span
+      current = Date.new(timeline_start.year, timeline_start.month, 1)
+      while current <= timeline_end
+        month_start = [current, timeline_start].max
+        month_end = [current.next_month - 1, timeline_end].min
+        start_index = [(month_start - timeline_start).to_i, 0].max
+        end_index = [(month_end - timeline_start).to_i, total_days - 1].min
+        span = end_index - start_index + 1
+        label = "#{Date::MONTHNAMES[current.month]} #{current.year}"
+        yield(start_index, span, label)
+        current = current.next_month
+      end
+    end
+
+    def available_space(pdf)
+      pdf.cursor - FOOTER_HEIGHT
     end
   end
 end

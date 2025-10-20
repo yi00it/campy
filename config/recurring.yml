@@ -1,15 +1,14 @@
-# examples:
-#   periodic_cleanup:
-#     class: CleanSoftDeletedRecordsJob
-#     queue: background
-#     args: [ 1000, { batch_size: 500 } ]
-#     schedule: every hour
-#   periodic_cleanup_with_command:
-#     command: "SoftDeletedRecord.due.delete_all"
-#     priority: 2
-#     schedule: at 5am every day
+# Solid Queue Recurring Tasks Configuration
+# These jobs run on a schedule to send notifications
 
-production:
-  clear_solid_queue_finished_jobs:
-    command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
-    schedule: every hour at minute 12
+# Daily digest - sends consolidated email summary
+send_daily_digest:
+  class: SendDailyDigestJob
+  schedule: "0 9 * * *"  # Every day at 9:00 AM
+  queue: default
+
+# Due date checker - warns about upcoming deadlines
+check_upcoming_due_dates:
+  class: CheckUpcomingDueDatesJob
+  schedule: "0 8 * * *"  # Every day at 8:00 AM
+  queue: default

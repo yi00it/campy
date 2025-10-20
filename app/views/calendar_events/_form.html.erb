@@ -1,0 +1,54 @@
+<%= form_with(model: calendar_event, local: true) do |form| %>
+  <% if calendar_event.errors.any? %>
+    <div class="flash">
+      <p class="flash__item flash__item--warn">
+        <%= pluralize(calendar_event.errors.count, "error") %> prevented saving: <%= calendar_event.errors.full_messages.to_sentence %>
+      </p>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :title %>
+    <%= form.text_field :title, required: true %>
+  </div>
+
+  <div class="field">
+    <%= form.label :event_type, "Type" %>
+    <%= form.select :event_type,
+                    options_for_select([['Task', 'task'], ['Meeting', 'meeting'], ['Custom', 'custom']], calendar_event.event_type),
+                    {},
+                    class: "select" %>
+  </div>
+
+  <div class="field field--inline">
+    <div>
+      <%= form.label :start_at, "Start" %>
+      <%= form.datetime_field :start_at, required: true %>
+    </div>
+    <div>
+      <%= form.label :end_at, "End" %>
+      <%= form.datetime_field :end_at, required: true %>
+    </div>
+  </div>
+
+  <div class="field">
+    <%= form.label :all_day do %>
+      <%= form.check_box :all_day %> All-day event
+    <% end %>
+  </div>
+
+  <div class="field">
+    <%= form.label :location %>
+    <%= form.text_field :location %>
+  </div>
+
+  <div class="field">
+    <%= form.label :description %>
+    <%= form.text_area :description, rows: 3 %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit class: "btn btn--primary" %>
+    <%= link_to "Cancel", calendar_path(month: calendar_event.start_at&.to_date || Date.current), class: "btn btn--ghost" %>
+  </div>
+<% end %>

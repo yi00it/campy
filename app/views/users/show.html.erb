@@ -1,0 +1,115 @@
+<section class="section">
+  <header class="section__head">
+    <div class="section__headline">
+      <span class="pill"><%= @own_profile ? "Your profile" : "Team member" %></span>
+      <h1 class="section__title"><%= @user.display_name %></h1>
+      <p class="meta"><%= @user.email %></p>
+    </div>
+    <div class="section__actions">
+      <% status_class = @online ? "pill--success" : "pill--frost" %>
+      <span class="pill <%= status_class %>">
+        <%= @online ? "Online" : "Offline" %>
+      </span>
+      <% if @last_seen_at.present? %>
+        <span class="meta">Last active <%= time_ago_in_words(@last_seen_at) %> ago</span>
+      <% end %>
+    </div>
+  </header>
+
+  <div class="split">
+    <div class="stack">
+      <div class="card">
+        <h2 class="section__title section__title--sm section__title--flush">Projects together</h2>
+        <% if @shared_projects.any? %>
+          <ul class="list-reset stack mt-md">
+            <% @shared_projects.each do |project| %>
+              <li class="list-inline list-inline--spread">
+                <div>
+                  <strong><%= link_to project.name, project_path(project) %></strong>
+                  <span class="meta">Owner: <%= project.owner.display_name %></span>
+                </div>
+                <span class="meta"><%= project.updated_at.present? ? "Updated #{time_ago_in_words(project.updated_at)} ago" : "" %></span>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="meta mt-md">No shared projects yet.</p>
+        <% end %>
+      </div>
+
+      <div class="card">
+        <div class="list-inline list-inline--spread">
+          <h2 class="section__title section__title--sm section__title--flush">Open activities</h2>
+          <span class="meta"><%= pluralize(@open_activities.count, "open activity") %></span>
+        </div>
+
+        <% if @open_activities.any? %>
+          <div class="activity-table-wrapper mt-sm">
+            <table class="activity-table" role="grid">
+              <thead>
+                <tr>
+                  <th scope="col">Activity</th>
+                  <th scope="col">Project</th>
+                  <th scope="col">Discipline</th>
+                  <th scope="col">Due</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @open_activities.each do |activity| %>
+                  <tr>
+                    <td>
+                      <strong><%= link_to activity.title, activity_path(activity) %></strong>
+                      <span class="meta"><%= activity.zone&.name || "No zone" %></span>
+                    </td>
+                    <td><span class="meta"><%= activity.project.name %></span></td>
+                    <td><span class="meta"><%= activity.discipline&.name || "Unassigned" %></span></td>
+                    <td>
+                      <% if activity.due_on.present? %>
+                        <span class="pill <%= 'pill--warn' if activity.due_on < Date.current %>"><%= activity.due_on.to_fs(:short) %></span>
+                      <% else %>
+                        <span class="meta">No due date</span>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <p class="meta mt-md">No open activities assigned right now.</p>
+        <% end %>
+      </div>
+    </div>
+
+    <aside class="stack">
+      <div class="card">
+        <h2 class="section__title section__title--sm section__title--flush">Profile snapshot</h2>
+        <ul class="list-reset stack mt-md">
+          <li class="list-inline list-inline--spread">
+            <span class="meta">Username</span>
+            <strong><%= @user.username.presence || "Not set" %></strong>
+          </li>
+          <li class="list-inline list-inline--spread">
+            <span class="meta">Member since</span>
+            <strong><%= @user.created_at.to_date.to_fs(:long) %></strong>
+          </li>
+          <li class="list-inline list-inline--spread">
+            <span class="meta">Preferred theme</span>
+            <strong><%= @user.preferred_theme.titleize %></strong>
+          </li>
+        </ul>
+      </div>
+
+      <% if @can_message %>
+        <div class="card">
+          <h2 class="section__title section__title--sm section__title--flush">Reach out</h2>
+          <p class="meta">Start a direct message conversation.</p>
+          <%= form_with url: conversations_path, method: :post, scope: :conversation, local: true, class: "stack mt-md" do |form| %>
+            <%= form.hidden_field :user_id, value: @user.id %>
+            <%= form.submit "Send message", class: "btn btn--primary" %>
+          <% end %>
+        </div>
+      <% end %>
+    </aside>
+  </div>
+</section>

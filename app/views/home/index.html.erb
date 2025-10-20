@@ -1,14 +1,14 @@
 <section class="hero">
   <div class="hero__card">
-    <span class="hero__prehead">Your team’s calm and collected HQ</span>
-    <h1 class="hero__title">All your projects, activities, and notes under one roof.</h1>
+    <span class="hero__prehead">Built for modern construction teams</span>
+    <h1 class="hero__title">Run every project, crew, and subcontractor from one place.</h1>
     <p class="hero__lead">
-      Campy gives your team the calm clarity of Basecamp with a focused spin for your own projects.
-      Plan activities, assign categories, and keep conversations threaded in one friendly workspace.
+      Campy keeps site updates, schedules, RFIs, and punch lists together so superintendents, project
+      managers, and office staff always know the next move. No more scattered spreadsheets or text chains.
     </p>
     <div class="hero__cta">
-      <%= link_to "Start for free", new_user_registration_path, class: "btn btn--primary" %>
-      <%= link_to "See how it works", new_user_session_path, class: "btn btn--ghost" %>
+      <%= link_to "Start your free trial", new_user_registration_path, class: "btn btn--primary" %>
+      <%= link_to "Log in to explore", new_user_session_path, class: "btn btn--ghost" %>
     </div>
   </div>
   <div class="hero__sparkle"></div>
@@ -16,29 +16,70 @@
 
 <section class="section">
   <header class="section__head">
-    <h2 class="section__title">What you’ll love</h2>
+    <h2 class="section__title">Why builders choose Campy</h2>
     <p class="section__lead">
-      Borrowed from the spirit of Basecamp’s famous homepage—minus the chaos. Campy keeps things light, bright,
-      and approachable so your team actually wants to log in every day.
+      Purpose-built for construction management, Campy gives you field clarity and office control without
+      forcing the team into heavy enterprise software.
     </p>
   </header>
 
   <div class="grid cards">
     <article class="card">
-      <h3>Activities > Todos</h3>
-      <p class="meta">Group work with categories, due dates, and quick status toggles. Everything is snappy and feels good.</p>
+      <h3>Schedule certainty</h3>
+      <p class="meta">Sequence work, flag delays, and mobilize the right crews before critical path tasks slip.</p>
     </article>
     <article class="card">
-      <h3>Friendly messaging</h3>
-      <p class="meta">Add updates to any activity and keep the discussion right where the work happens—never search Slack again.</p>
+      <h3>Field updates</h3>
+      <p class="meta">Drop site photos, inspections, and daily logs straight into activities so decisions happen with context.</p>
     </article>
     <article class="card">
-      <h3>Clear owners</h3>
-      <p class="meta">Projects live with their owners. Permissions keep the right people in-the-know, automatically.</p>
+      <h3>Subcontractor alignment</h3>
+      <p class="meta">Invite partners, control permissions, and keep every trade accountable to the latest instructions.</p>
     </article>
     <article class="card">
-      <h3>Reassuring rhythm</h3>
-      <p class="meta">A calm visual style, soft shadows, and bright accents inspired by Basecamp remit anxiety and give breathing room.</p>
+      <h3>Cost visibility</h3>
+      <p class="meta">Track commitments and change requests alongside work so overruns are caught long before payout time.</p>
     </article>
+  </div>
+</section>
+
+<section class="section">
+  <div class="split">
+    <div class="card">
+      <h2 class="section__title section__title--sm">Keep every phase on track</h2>
+      <p class="meta">
+        From pre-construction through handover, Campy keeps your team aligned on scope, schedule, and quality.
+      </p>
+      <ul class="list-reset stack mt-md">
+        <li><strong>Live dashboards</strong> show what’s blocked today and what’s coming next week.</li>
+        <li><strong>On-site reporting</strong> captures safety issues, punch items, and inspections in seconds.</li>
+        <li><strong>Owner-ready exports</strong> share progress updates without chasing down siloed notes.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2 class="section__title section__title--sm">See it for yourself</h2>
+      <p class="meta">Set up your first project, invite your superintendent, and experience a calmer build.</p>
+      <div class="hero__cta mt-md">
+        <%= link_to "Create your workspace", new_user_registration_path, class: "btn btn--primary" %>
+        <%= link_to "Sign in", new_user_session_path, class: "btn btn--ghost" %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <div class="section__head section__head--tight">
+      <span class="pill pill--sunrise">Ready when the next project lands</span>
+      <h2 class="section__title section__title--sm mt-sm">Deliver your next build on time and without chaos.</h2>
+    </div>
+    <p class="meta">
+      Join construction teams who keep trades coordinated, documentation organized, and clients informed—
+      all from one focused workspace.
+    </p>
+    <div class="hero__cta mt-md">
+      <%= link_to "Start planning today", new_user_registration_path, class: "btn btn--primary" %>
+      <%= link_to "Already a customer? Log in", new_user_session_path, class: "btn btn--ghost" %>
+    </div>
   </div>
 </section>

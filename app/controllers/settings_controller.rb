@@ -51,7 +51,13 @@ class SettingsController < ApplicationController
       :remove_avatar,
       :password,
       :password_confirmation,
-      :current_password
+      :current_password,
+      :email_notifications,
+      :in_app_notifications,
+      :sms_notifications,
+      :phone_number,
+      :daily_digest,
+      :digest_time
     )
   end
 

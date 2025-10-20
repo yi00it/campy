@@ -38,6 +38,9 @@ gem "kamal", require: false
 gem "thruster", require: false
 
 gem "prawn"
+gem "csv" # CSV parsing (required for Ruby 3.4+)
+gem "roo", "~> 2.10" # Excel/spreadsheet parsing
+gem "roo-xls" # Support for .xls files
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 # gem "image_processing", "~> 1.2"
 
@@ -55,6 +58,8 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
+  gem "letter_opener"
+  gem "letter_opener_web"
 end
 
 group :test do

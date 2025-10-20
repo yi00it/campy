@@ -1,0 +1,16 @@
+<% other_users = conversation.users.where.not(id: viewer.id) %>
+<% last_message = conversation.messages.order(created_at: :desc).first %>
+
+<li class="conversation-item" id="<%= dom_id(conversation, :preview) %>">
+  <%= link_to conversation_path(conversation), class: "conversation-link" do %>
+    <div class="conversation-link__headline">
+      <strong><%= other_users.map(&:display_name).presence&.to_sentence || viewer.display_name %></strong>
+      <% if last_message %>
+        <span class="meta"><%= l(last_message.created_at, format: :short) %></span>
+      <% end %>
+    </div>
+    <span class="meta conversation-link__preview">
+      <%= last_message&.body&.truncate(80) || "No messages yet" %>
+    </span>
+  <% end %>
+</li>

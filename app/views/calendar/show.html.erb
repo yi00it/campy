@@ -1,0 +1,127 @@
+<section class="section section--calendar" data-controller="calendar">
+  <header class="section__head calendar__header">
+    <div class="calendar__header-nav">
+      <%= link_to "←", calendar_path(month: (@current_date - 1.month).strftime("%Y-%m-01")), class: "btn btn--ghost" %>
+      <h1 class="section__title"><%= @current_date.strftime("%B %Y") %></h1>
+      <%= link_to "→", calendar_path(month: (@current_date + 1.month).strftime("%Y-%m-01")), class: "btn btn--ghost" %>
+    </div>
+    <div class="calendar__header-actions">
+      <%= link_to "Today", calendar_path, class: "btn btn--ghost" %>
+      <%= link_to "New event", new_calendar_event_path, class: "btn btn--primary" %>
+    </div>
+  </header>
+
+  <div class="calendar__legend">
+    <button type="button"
+            class="calendar__filter-button calendar__filter-button--activity"
+            data-calendar-target="toggle"
+            data-calendar-type="activity"
+            data-action="click->calendar#toggle"
+            aria-pressed="true">
+      Assigned activities
+    </button>
+    <button type="button"
+            class="calendar__filter-button calendar__filter-button--meeting calendar__filter-button--active"
+            data-calendar-target="toggle"
+            data-calendar-type="meeting"
+            data-action="click->calendar#toggle"
+            aria-pressed="true">
+      Meetings
+    </button>
+    <button type="button"
+            class="calendar__filter-button calendar__filter-button--task calendar__filter-button--active"
+            data-calendar-target="toggle"
+            data-calendar-type="task"
+            data-action="click->calendar#toggle"
+            aria-pressed="true">
+      Personal tasks
+    </button>
+  </div>
+
+  <div class="calendar__grid">
+    <div class="calendar__weekdays">
+      <% %w[Mon Tue Wed Thu Fri Sat Sun].each do |day| %>
+        <span class="calendar__weekday"><%= day %></span>
+      <% end %>
+    </div>
+
+    <% calendar_weeks(@calendar_range).each do |week| %>
+      <div class="calendar__week">
+        <% week.each do |date| %>
+          <% entries = @entries_by_day[date] || [] %>
+          <div class="<%= day_classes(date, @current_date) %>">
+            <div class="calendar__day-header">
+              <span class="calendar__day-label"><%= date.day %></span>
+              <%= link_to "+", new_calendar_event_path(start_at: date), class: "calendar__day-add" %>
+            </div>
+
+            <ul class="calendar__entries">
+              <% entries.sort_by { |entry| entry[:sort_key] || Time.zone.now.beginning_of_day }.each do |entry| %>
+                <% if entry[:category] == :activity %>
+                  <% activity = entry[:activity] %>
+                  <li class="calendar__entry calendar__entry--activity" data-calendar-target="entry" data-calendar-category="activity">
+                    <div class="calendar__entry-body">
+                      <span class="calendar__entry-title"><%= link_to activity.title, activity_path(activity) %></span>
+                      <span class="calendar__entry-meta"><%= activity.project.name %></span>
+                    </div>
+                  </li>
+                <% else %>
+                  <% event = entry[:calendar_event] %>
+                  <li class="calendar__entry calendar__entry--<%= event.event_type %>" data-calendar-target="entry" data-calendar-category="<%= event.event_type %>">
+                    <div class="calendar__entry-body">
+                      <span class="calendar__entry-title"><%= link_to event.title, edit_calendar_event_path(event) %></span>
+                      <% unless entry[:all_day] %>
+                        <span class="calendar__entry-meta">
+                          <%= format_time(event.start_at) %> – <%= format_time(event.end_at) %>
+                        </span>
+                      <% end %>
+                      <% if event.location.present? %>
+                        <span class="calendar__entry-meta"><%= event.location %></span>
+                      <% end %>
+                    </div>
+                  </li>
+                <% end %>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <aside class="calendar__sidebar">
+    <div class="card">
+      <h2 class="section__title section__title--sm section__title--flush">Upcoming</h2>
+      <% upcoming_dates = (@entries_by_day.keys.select { |date| date >= Date.current }.sort.first(7)) %>
+      <ul class="list-reset stack mt-md" data-calendar-target="upcoming-list" <%= 'hidden' unless upcoming_dates.any? %>>
+        <% upcoming_dates.each do |date| %>
+          <% day_entries = @entries_by_day[date] %>
+          <% day_entries.each do |entry| %>
+            <% if entry[:category] == :activity %>
+              <% activity = entry[:activity] %>
+              <li class="calendar__upcoming-item" data-calendar-target="entry" data-calendar-category="activity">
+                <span class="calendar__upcoming-date"><%= date.strftime("%a %d %b") %></span>
+                <div>
+                  <strong><%= link_to activity.title, activity_path(activity) %></strong>
+                  <span class="meta">Project: <%= activity.project.name %></span>
+                </div>
+              </li>
+            <% else %>
+              <% event = entry[:calendar_event] %>
+              <li class="calendar__upcoming-item" data-calendar-target="entry" data-calendar-category="<%= event.event_type %>">
+                <span class="calendar__upcoming-date"><%= date.strftime("%a %d %b") %></span>
+                <div>
+                  <strong><%= link_to event.title, edit_calendar_event_path(event) %></strong>
+                  <% unless entry[:all_day] %>
+                    <span class="meta"><%= format_time(event.start_at) %></span>
+                  <% end %>
+                </div>
+              </li>
+            <% end %>
+          <% end %>
+        <% end %>
+      </ul>
+      <p class="meta mt-md" data-calendar-target="upcoming-empty" <%= 'hidden' if upcoming_dates.any? %>>No upcoming items for the next week.</p>
+    </div>
+  </aside>
+</section>

@@ -13,42 +13,53 @@
   </header>
 
   <% if @activities.any? %>
-    <div class="gantt">
-      <% total_days = gantt_total_days(@timeline_start, @timeline_end) %>
-      <div class="gantt__header">
-        <div class="gantt__label">Activity</div>
-        <div class="gantt__timeline" style="grid-template-columns: repeat(<%= total_days %>, minmax(32px, 1fr));">
-          <% (@timeline_start..@timeline_end).each do |date| %>
-            <div class="gantt__timeline-cell <%= 'gantt__timeline-cell--weekend' if date.saturday? || date.sunday? %>" title="<%= l(date) %>">
-              <span><%= date.strftime('%d') %></span>
-            </div>
-          <% end %>
-        </div>
-      </div>
+    <% activities_payload = @activities.map do |activity|
+        {
+          id: activity.id,
+          title: activity.title,
+          status: activity_status(activity).to_s,
+          start_on: activity.start_on&.iso8601,
+          due_on: activity.due_on&.iso8601,
+          start_label: activity.start_on&.to_fs(:long) || "N/A",
+          due_label: activity.due_on&.to_fs(:long) || "N/A",
+          assignee: activity.assignee&.display_name || "Unassigned",
+          discipline: activity.discipline&.name,
+          zone: activity.zone&.name,
+          duration_days: activity.duration_days,
+          url: activity_path(activity)
+        }
+      end %>
 
-      <% @activities.each do |activity| %>
-        <div class="gantt__row">
-          <div class="gantt__label">
-            <strong><%= activity.title %></strong>
-            <span class="meta">
-              <%= activity.assignee&.email || 'Unassigned' %>
-            </span>
-          </div>
-          <div class="gantt__bars">
-            <div class="gantt__grid" style="grid-template-columns: repeat(<%= total_days %>, minmax(32px, 1fr));">
-              <% (@timeline_start..@timeline_end).each do |date| %>
-                <div class="gantt__grid-cell <%= 'gantt__timeline-cell--weekend' if date.saturday? || date.sunday? %>"></div>
-              <% end %>
-            </div>
-            <div class="gantt__bar" style="<%= gantt_bar_style(@timeline_start, @timeline_end, activity) %>">
-              <span class="gantt__bar-text">
-                <%= activity.start_on&.to_fs(:long) || 'N/A' %> – <%= activity.due_on&.to_fs(:long) || 'N/A' %>
-              </span>
-            </div>
-          </div>
-        </div>
-      <% end %>
+    <div
+      class="gantt-wrapper"
+      data-controller="gantt"
+      data-gantt-target="wrapper"
+      data-gantt-start-value="<%= @timeline_start.iso8601 %>"
+      data-gantt-end-value="<%= @timeline_end.iso8601 %>"
+      data-gantt-activities-value="<%= activities_payload.to_json %>"
+      data-gantt-scale-value="auto"
+      data-gantt-project-id-value="<%= @project.id %>"
+    >
+      <div class="gantt__toolbar">
+        <span class="gantt__toolbar-label">Scale:</span>
+        <button type="button" class="gantt__toolbar-button" data-gantt-target="scaleButton" data-gantt-scale-step="auto" data-action="click->gantt#setScale">Auto</button>
+        <button type="button" class="gantt__toolbar-button" data-gantt-target="scaleButton" data-gantt-scale-step="day" data-action="click->gantt#setScale">Daily</button>
+        <button type="button" class="gantt__toolbar-button" data-gantt-target="scaleButton" data-gantt-scale-step="week" data-action="click->gantt#setScale">Weekly</button>
+        <button type="button" class="gantt__toolbar-button" data-gantt-target="scaleButton" data-gantt-scale-step="month" data-action="click->gantt#setScale">Monthly</button>
+        <div class="gantt__toolbar-spacer"></div>
+        <button type="button"
+                class="gantt__toolbar-button gantt__toolbar-button--ghost"
+                data-action="click->gantt#toggleFullscreen"
+                data-gantt-target="fullscreenButton"
+                aria-pressed="false">
+          Full screen
+        </button>
+      </div>
+      <div class="gantt" data-gantt-target="canvas"></div>
     </div>
+    <noscript>
+      <p class="meta meta--note">Enable JavaScript to view the interactive Gantt chart.</p>
+    </noscript>
   <% else %>
     <div class="empty-state">
       <p>No activities yet. Once you add some, their schedule will appear here.</p>

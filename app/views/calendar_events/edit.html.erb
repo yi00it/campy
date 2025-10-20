@@ -1,0 +1,14 @@
+<section class="section">
+  <header class="section__head">
+    <h1 class="section__title">Edit event</h1>
+    <p class="section__lead">Update details or timing for this calendar entry.</p>
+  </header>
+
+  <div class="card">
+    <%= render "form", calendar_event: @calendar_event %>
+  </div>
+
+  <div class="hero__cta mt-md">
+    <%= button_to "Delete event", calendar_event_path(@calendar_event), method: :delete, data: { turbo_confirm: "Remove this event?" }, class: "btn btn--text" %>
+  </div>
+</section>

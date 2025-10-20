@@ -50,12 +50,75 @@
 
       <hr class="hr">
 
-      <fieldset class="stack">
+      <fieldset class="stack" data-controller="theme">
         <legend class="section__title section__title--sm section__title--flush">Appearance</legend>
         <div class="field">
           <%= form.label :preferred_theme, "Theme" %>
-          <%= form.select :preferred_theme, [["Light", "light"], ["Dark", "dark"]], {}, class: "select" %>
+          <%= form.select :preferred_theme, [["Light", "light"], ["Dark", "dark"]], {},
+              { class: "select", data: { action: "change->theme#change" } } %>
           <p class="meta meta--note">Choose the default look for the app when you sign in.</p>
+        </div>
+      </fieldset>
+
+      <hr class="hr">
+
+      <fieldset class="stack">
+        <legend class="section__title section__title--sm section__title--flush">Notifications</legend>
+        <p class="meta meta--note">Control how you receive updates about your projects and activities.</p>
+
+        <div class="field">
+          <label class="checkbox-label">
+            <%= form.check_box :in_app_notifications, class: "checkbox" %>
+            <span>In-app notifications</span>
+          </label>
+          <p class="meta meta--note">Show notifications in the bell icon when you're using Campy.</p>
+        </div>
+
+        <div class="field">
+          <label class="checkbox-label">
+            <%= form.check_box :email_notifications, class: "checkbox" %>
+            <span>Email notifications</span>
+          </label>
+          <p class="meta meta--note">Receive instant email alerts for activities, comments, and messages.</p>
+        </div>
+
+        <div class="field">
+          <label class="checkbox-label">
+            <%= form.check_box :daily_digest, class: "checkbox" %>
+            <span>Daily digest email</span>
+          </label>
+          <p class="meta meta--note">Get a consolidated summary of your notifications once per day.</p>
+        </div>
+
+        <div class="field">
+          <%= form.label :digest_time, "Digest delivery time" %>
+          <%= form.select :digest_time,
+              options_for_select([
+                ["6:00 AM", "06:00"],
+                ["7:00 AM", "07:00"],
+                ["8:00 AM", "08:00"],
+                ["9:00 AM", "09:00"],
+                ["10:00 AM", "10:00"],
+                ["12:00 PM", "12:00"],
+                ["6:00 PM", "18:00"]
+              ], @user.digest_time),
+              {},
+              { class: "select" } %>
+          <p class="meta meta--note">What time should we send your daily digest?</p>
+        </div>
+
+        <div class="field">
+          <label class="checkbox-label">
+            <%= form.check_box :sms_notifications, class: "checkbox" %>
+            <span>SMS notifications (text messages)</span>
+          </label>
+          <p class="meta meta--note">Receive text alerts for urgent updates (requires phone number).</p>
+        </div>
+
+        <div class="field">
+          <%= form.label :phone_number, "Phone number (for SMS)" %>
+          <%= form.text_field :phone_number, placeholder: "+1234567890" %>
+          <p class="meta meta--note">Include country code (e.g., +1 for US/Canada).</p>
         </div>
       </fieldset>
 

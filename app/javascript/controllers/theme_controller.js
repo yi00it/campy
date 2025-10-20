@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 const STORAGE_KEY = "campy-theme"
 
-// Toggles between light and dark themes by setting data-theme on <body>
+// Handles theme changes by setting data-theme on <body>
 export default class extends Controller {
   static targets = ["label"]
 
@@ -10,6 +10,14 @@ export default class extends Controller {
     const stored = this.storedTheme
     this.theme = stored ? stored : "light"
     this.applyTheme()
+  }
+
+  // Called when user changes theme in settings dropdown
+  change(event) {
+    const newTheme = event.target.value
+    this.theme = newTheme
+    this.applyTheme()
+    window.localStorage.setItem(STORAGE_KEY, this.theme)
   }
 
   toggle(event) {

@@ -1,0 +1,80 @@
+<div class="notification-dropdown" data-notifications-target="dropdown">
+  <div class="notification-dropdown__header">
+    <h3 class="notification-dropdown__title">Notifications</h3>
+    <%= button_to "Mark all as read", mark_all_as_read_notifications_path,
+        method: :post,
+        class: "notification-dropdown__mark-all",
+        data: { turbo: false } %>
+  </div>
+
+  <div class="notification-dropdown__tabs">
+    <button class="notification-tab notification-tab--active" data-action="click->notifications#filterTab" data-type="all">
+      All <span class="notification-tab__count"><%= @unread_count %></span>
+    </button>
+    <button class="notification-tab" data-action="click->notifications#filterTab" data-type="mention">
+      Mention <span class="notification-tab__count"><%= @mention_count %></span>
+    </button>
+    <button class="notification-tab" data-action="click->notifications#filterTab" data-type="activity">
+      Activity <span class="notification-tab__count"><%= @activity_count %></span>
+    </button>
+    <button class="notification-tab" data-action="click->notifications#filterTab" data-type="project">
+      Project <span class="notification-tab__count"><%= @project_count %></span>
+    </button>
+    <%= link_to notifications_path, class: "notification-tab notification-tab--settings", title: "Notification settings" do %>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M8 10a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M14 8a6 6 0 11-12 0 6 6 0 0112 0z" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+    <% end %>
+  </div>
+
+  <div class="notification-dropdown__content">
+    <% if @notifications.empty? %>
+      <div class="notification-dropdown__empty">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <path d="M24 40c8.837 0 16-7.163 16-16S32.837 8 24 8 8 15.163 8 24s7.163 16 16 16z" stroke="currentColor" stroke-width="2" fill="none"/>
+          <path d="M24 18v8m0 4h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <p>No notifications yet</p>
+      </div>
+    <% else %>
+      <% grouped_notifications = @notifications.group_by { |n| notification_date_group(n) } %>
+
+      <% grouped_notifications.each do |group, notifications| %>
+        <div class="notification-group">
+          <h4 class="notification-group__title"><%= group %></h4>
+
+          <% notifications.each do |notification| %>
+            <%= link_to notification.url, class: "notification-item #{notification.read? ? 'notification-item--read' : 'notification-item--unread'}",
+                data: {
+                  type: notification_type_category(notification.action),
+                  action: "click->notifications#markAsRead",
+                  notification_id: notification.id
+                } do %>
+
+              <div class="notification-item__icon notification-item__icon--<%= notification_icon_type(notification.action) %>">
+                <%= notification_icon_svg(notification.action) %>
+              </div>
+
+              <div class="notification-item__content">
+                <div class="notification-item__title"><%= notification_title(notification) %></div>
+                <div class="notification-item__message"><%= notification.message %></div>
+              </div>
+
+              <div class="notification-item__meta">
+                <span class="notification-item__time"><%= time_ago_in_words(notification.created_at) %> ago</span>
+                <% unless notification.read? %>
+                  <span class="notification-item__unread-dot"></span>
+                <% end %>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+
+      <div class="notification-dropdown__footer">
+        <%= link_to "View all notifications", notifications_path, class: "notification-dropdown__view-all" %>
+      </div>
+    <% end %>
+  </div>
+</div>

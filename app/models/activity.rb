@@ -24,7 +24,9 @@ class Activity < ApplicationRecord
 
   def set_due_on_from_duration
     return unless duration_days.present? && start_on.present?
-    self.due_on = start_on + duration_days.to_i.days
+    # Duration represents the number of days the task spans (inclusive)
+    # So a 5-day task starting Monday should end Friday (start + 4 days)
+    self.due_on = start_on + (duration_days.to_i - 1).days
   end
 
   def due_on_not_before_start
@@ -36,6 +38,6 @@ class Activity < ApplicationRecord
   def assignee_is_part_of_project
     return if assignee.blank? || project.blank?
 
-    errors.add(:assignee, "must belong to the project") unless project.team_members.include?(assignee)
+    errors.add(:assignee, "must belong to the project") unless project.assignable_members.include?(assignee)
   end
 end

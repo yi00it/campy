@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_17_140000) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_20_113205) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -60,8 +60,30 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_17_140000) do
     t.integer "duration_days"
     t.index ["assignee_id"], name: "index_activities_on_assignee_id"
     t.index ["discipline_id"], name: "index_activities_on_discipline_id"
+    t.index ["due_on"], name: "index_activities_on_due_on"
+    t.index ["project_id", "start_on"], name: "index_activities_on_project_id_and_start_on"
     t.index ["project_id"], name: "index_activities_on_project_id"
+    t.index ["start_on"], name: "index_activities_on_start_on"
     t.index ["zone_id"], name: "index_activities_on_zone_id"
+  end
+
+  create_table "calendar_events", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "activity_id"
+    t.string "title", null: false
+    t.text "description"
+    t.datetime "start_at", null: false
+    t.datetime "end_at", null: false
+    t.string "event_type", default: "custom", null: false
+    t.string "location"
+    t.boolean "all_day", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["activity_id"], name: "index_calendar_events_on_activity_id"
+    t.index ["end_at"], name: "index_calendar_events_on_end_at"
+    t.index ["start_at"], name: "index_calendar_events_on_start_at"
+    t.index ["user_id", "start_at"], name: "index_calendar_events_on_user_id_and_start_at"
+    t.index ["user_id"], name: "index_calendar_events_on_user_id"
   end
 
   create_table "comment_reactions", force: :cascade do |t|
@@ -119,11 +141,44 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_17_140000) do
     t.index ["user_id"], name: "index_messages_on_user_id"
   end
 
+  create_table "notifications", force: :cascade do |t|
+    t.integer "recipient_id", null: false
+    t.integer "actor_id"
+    t.string "notifiable_type", null: false
+    t.bigint "notifiable_id", null: false
+    t.string "action", null: false
+    t.datetime "read_at"
+    t.text "metadata"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["actor_id"], name: "index_notifications_on_actor_id"
+    t.index ["notifiable_type", "notifiable_id"], name: "index_notifications_on_notifiable"
+    t.index ["recipient_id", "created_at"], name: "index_notifications_on_recipient_id_and_created_at"
+    t.index ["recipient_id", "read_at"], name: "index_notifications_on_recipient_id_and_read_at"
+    t.index ["recipient_id"], name: "index_notifications_on_recipient_id"
+  end
+
+  create_table "project_invitations", force: :cascade do |t|
+    t.bigint "project_id", null: false
+    t.bigint "invited_by_id", null: false
+    t.string "email", null: false
+    t.string "token", null: false
+    t.datetime "accepted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "role", default: "contributor", null: false
+    t.index ["invited_by_id"], name: "index_project_invitations_on_invited_by_id"
+    t.index ["project_id", "email"], name: "index_project_invitations_on_project_id_and_email", unique: true
+    t.index ["project_id"], name: "index_project_invitations_on_project_id"
+    t.index ["token"], name: "index_project_invitations_on_token", unique: true
+  end
+
   create_table "project_memberships", force: :cascade do |t|
     t.bigint "project_id", null: false
     t.bigint "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "role", default: "contributor", null: false
     t.index ["project_id", "user_id"], name: "index_project_memberships_on_project_id_and_user_id", unique: true
     t.index ["project_id"], name: "index_project_memberships_on_project_id"
     t.index ["user_id"], name: "index_project_memberships_on_user_id"
@@ -148,6 +203,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_17_140000) do
     t.datetime "updated_at", null: false
     t.string "username"
     t.string "preferred_theme", default: "light", null: false
+    t.boolean "email_notifications", default: true, null: false
+    t.boolean "in_app_notifications", default: true, null: false
+    t.boolean "sms_notifications", default: false, null: false
+    t.string "phone_number"
+    t.boolean "daily_digest", default: false, null: false
+    t.string "digest_time", default: "09:00", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["username"], name: "index_users_on_username", unique: true
@@ -166,6 +227,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_17_140000) do
   add_foreign_key "activities", "projects"
   add_foreign_key "activities", "users", column: "assignee_id"
   add_foreign_key "activities", "zones"
+  add_foreign_key "calendar_events", "activities"
+  add_foreign_key "calendar_events", "users"
   add_foreign_key "comment_reactions", "comments"
   add_foreign_key "comment_reactions", "users"
   add_foreign_key "comments", "activities"
@@ -174,6 +237,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_17_140000) do
   add_foreign_key "conversation_memberships", "users"
   add_foreign_key "messages", "conversations"
   add_foreign_key "messages", "users"
+  add_foreign_key "notifications", "users", column: "actor_id"
+  add_foreign_key "notifications", "users", column: "recipient_id"
+  add_foreign_key "project_invitations", "projects"
+  add_foreign_key "project_invitations", "users", column: "invited_by_id"
   add_foreign_key "project_memberships", "projects"
   add_foreign_key "project_memberships", "users"
   add_foreign_key "projects", "users", column: "owner_id"
